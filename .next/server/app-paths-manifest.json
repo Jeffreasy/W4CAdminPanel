@@ -1,0 +1,4 @@
+{
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/looker-studio/page": "app/dashboard/looker-studio/page.js"
+}

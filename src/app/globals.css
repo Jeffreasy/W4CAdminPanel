@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-white;
+  }
+}
+
+@layer utilities {
+  .border-border {
+    border-color: hsl(var(--border));
+  }
+}
+
+/* Consistente achtergrondkleur variaties */
+@layer components {
+  .bg-card {
+    @apply bg-gradient-to-br from-gray-800 to-gray-900;
+  }
+  
+  .bg-card-alt {
+    @apply bg-gray-800/80;
+  }
+  
+  .bg-header {
+    @apply bg-gray-800/90 backdrop-blur-sm;
+  }
+  
+  .bg-accent {
+    @apply bg-blue-600;
+  }
+  
+  .bg-hover {
+    @apply hover:bg-gray-700/50;
+  }
+}
+
+/* Consistente border stijlen */
+@layer components {
+  .border-standard {
+    @apply border border-gray-700/50;
+  }
+  
+  .border-accent {
+    @apply border border-blue-500/30;
+  }
+  
+  .border-success {
+    @apply border border-green-500/30;
+  }
+  
+  .border-error {
+    @apply border border-red-500/30;
+  }
+  
+  .border-warning {
+    @apply border border-yellow-500/30;
+  }
+}
+
+/* Consistente box shadows */
+@layer components {
+  .shadow-standard {
+    @apply shadow-lg;
+  }
+  
+  .shadow-hover {
+    @apply hover:shadow-lg;
+  }
+}
+
+/* Consistente spacings en padding */
+@layer components {
+  .card-padding {
+    @apply p-4 sm:p-6;
+  }
+  
+  .section-spacing {
+    @apply space-y-5;
+  }
+  
+  .item-spacing {
+    @apply space-y-3 sm:space-y-4;
+  }
+}
+
+/* Consistente border radius */
+@layer components {
+  .rounded-standard {
+    @apply rounded-lg;
+  }
+  
+  .rounded-card {
+    @apply rounded-xl;
+  }
+  
+  .rounded-tag {
+    @apply rounded-full;
+  }
+}
+
+/* Standaard container stylen */
+@layer components {
+  .container-card {
+    @apply bg-card rounded-card shadow-standard border-standard card-padding;
+  }
+  
+  .container-section {
+    @apply bg-card-alt rounded-standard border-standard p-4;
+  }
+}
+
+/* Consistent text stylen */
+@layer components {
+  .text-title {
+    @apply text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-300;
+  }
+  
+  .text-subtitle {
+    @apply text-lg sm:text-xl font-medium;
+  }
+
+  .text-muted {
+    @apply text-gray-400;
+  }
+  
+  .text-info {
+    @apply text-xs sm:text-sm text-gray-400;
+  }
+  
+  .text-truncate {
+    @apply truncate;
+  }
+  
+  .text-wrap-all {
+    @apply break-all;
+  }
+}
+
+/* Consistent button stylen */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white text-sm transition-colors shadow-md hover:shadow-lg hover:-translate-y-0.5 transform duration-200;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-white text-sm transition-colors shadow-md hover:shadow-lg hover:-translate-y-0.5 transform duration-200;
+  }
+  
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md text-white text-sm transition-colors shadow-md hover:shadow-lg hover:-translate-y-0.5 transform duration-200;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-1 text-xs rounded;
+  }
+  
+  .btn-icon {
+    @apply p-2 rounded-full;
+  }
+}
+
+/* Status kleuren voor tags */
+@layer components {
+  .tag-success {
+    @apply bg-green-500/20 text-green-400 border-success px-2 py-1 rounded-tag text-xs font-medium;
+  }
+  
+  .tag-error {
+    @apply bg-red-500/20 text-red-400 border-error px-2 py-1 rounded-tag text-xs font-medium;
+  }
+  
+  .tag-warning {
+    @apply bg-yellow-500/20 text-yellow-400 border-warning px-2 py-1 rounded-tag text-xs font-medium;
+  }
+  
+  .tag-info {
+    @apply bg-blue-500/20 text-blue-400 border-accent px-2 py-1 rounded-tag text-xs font-medium;
+  }
+  
+  .tag-neutral {
+    @apply bg-gray-500/20 text-gray-400 border border-gray-500/30 px-2 py-1 rounded-tag text-xs font-medium;
+  }
+}
+
+/* Responsive helpers */
+@layer components {
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .desktop-only {
+    @apply hidden sm:block;
+  }
+  
+  .mobile-stack {
+    @apply flex-col sm:flex-row;
+  }
+  
+  .mobile-full {
+    @apply w-full sm:w-auto;
+  }
+  
+  .mobile-center {
+    @apply flex justify-center sm:justify-start;
+  }
+}
+
+/* Form elementem */
+@layer components {
+  .form-input {
+    @apply w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50;
+  }
+  
+  .form-select {
+    @apply w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-300 mb-1;
+  }
+  
+  .form-error {
+    @apply mt-1 text-xs text-red-400;
+  }
+} 
