@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Toaster } from 'react-hot-toast'
 import { animate, animateStaggered } from '../../utils/animations'
+import { HomeIcon, FolderIcon, CurrencyDollarIcon, ChartBarIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline'
 
 // Admin styles
 import '../globals.css'
@@ -18,47 +19,27 @@ const navItems = [
   { 
     name: 'Dashboard', 
     path: '/dashboard', 
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-      </svg>
-    )
+    icon: <HomeIcon className="h-5 w-5" />
+  },
+  { 
+    name: 'Content', 
+    path: '/dashboard/content', 
+    icon: <FolderIcon className="h-5 w-5" />
   },
   { 
     name: 'Orders', 
     path: '/dashboard/orders', 
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-      </svg>
-    )
-  },
-  { 
-    name: 'Products', 
-    path: '/dashboard/products', 
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    )
+    icon: <CurrencyDollarIcon className="h-5 w-5" />
   },
   { 
     name: 'Analytics', 
     path: '/dashboard/analytics', 
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    )
+    icon: <ChartBarIcon className="h-5 w-5" />
   },
   { 
     name: 'Looker Studio', 
     path: '/dashboard/looker-studio', 
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    )
+    icon: <DocumentChartBarIcon className="h-5 w-5" />
   },
 ]
 

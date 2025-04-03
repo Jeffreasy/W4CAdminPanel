@@ -166,25 +166,20 @@ export default function DashboardPage() {
         className="container-card"
       >
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-          <div>
-            <h1 className="text-title mb-2 flex items-center">
-              <span>
-                Welcome back
-              </span>
-              <div className="ml-2 inline-block w-1.5 h-6 bg-blue-500 animate-pulse rounded"></div>
-            </h1>
-            <p className="text-muted text-wrap-all">{user.email}</p>
+          <div className="px-6 py-4">
+            <h1 className="text-2xl font-semibold text-white mb-1">Welcome back</h1>
+            <p className="text-gray-400">{user.email}</p>
           </div>
-          <div className="flex gap-2 sm:gap-3 self-start sm:self-auto">
+          <div className="flex items-center gap-4 px-6">
             <button
               onClick={() => router.push('/dashboard/analytics')}
-              className="btn-primary"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
             >
               Analytics
             </button>
             <button
               onClick={() => signOut()}
-              className="btn-danger"
+              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
             >
               Sign Out
             </button>
@@ -206,71 +201,92 @@ export default function DashboardPage() {
       {/* Statistieken - 2x2 grid op mobiel, 4x1 op desktop */}
       <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="stat-card container-card hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-3 sm:mb-4">
-            <h2 className="text-subtitle text-gray-300">Orders</h2>
-            <span className="p-1.5 sm:p-2 bg-blue-500/10 text-blue-400 rounded-standard">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-              </svg>
-            </span>
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Orders</h2>
+                <p className="stat-value text-2xl sm:text-3xl font-bold text-white" data-value={totalOrders}>{totalOrders}</p>
+                <p className="text-info mt-2">total orders</p>
+              </div>
+              <div className="p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <p className="stat-value text-2xl sm:text-3xl font-bold text-white" data-value={totalOrders}>{totalOrders}</p>
-          <p className="text-info mt-1">total orders</p>
         </div>
         
         <div className="stat-card container-card hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-3 sm:mb-4">
-            <h2 className="text-subtitle text-gray-300">Revenue</h2>
-            <span className="p-1.5 sm:p-2 bg-amber-500/10 text-amber-400 rounded-standard">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </span>
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Revenue</h2>
+                <p className="stat-value text-2xl sm:text-3xl font-bold text-amber-500" data-value={totalRevenue}>€{totalRevenue.toFixed(2)}</p>
+                <p className="text-info mt-2">total revenue</p>
+              </div>
+              <div className="p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <p className="stat-value text-2xl sm:text-3xl font-bold text-amber-500" data-value={totalRevenue}>€{totalRevenue.toFixed(2)}</p>
-          <p className="text-info mt-1">total revenue</p>
         </div>
         
         <div className="stat-card container-card hover:border-green-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-3 sm:mb-4">
-            <h2 className="text-subtitle text-gray-300">Products</h2>
-            <span className="p-1.5 sm:p-2 bg-green-500/10 text-green-400 rounded-standard">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-              </svg>
-            </span>
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Products</h2>
+                <p className="stat-value text-2xl sm:text-3xl font-bold text-white" data-value={`${activeProducts}/${totalProducts}`}>
+                  {activeProducts}/{totalProducts}
+                </p>
+                <p className="text-info mt-2">active/total products</p>
+              </div>
+              <div className="p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <p className="stat-value text-2xl sm:text-3xl font-bold text-white" data-value={`${activeProducts}/${totalProducts}`}>
-            {activeProducts}/{totalProducts}
-          </p>
-          <p className="text-info mt-1">active/total products</p>
         </div>
         
         <div className="stat-card container-card hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-          <div className="flex justify-between items-start mb-3 sm:mb-4">
-            <h2 className="text-subtitle text-gray-300">Status</h2>
-            <span className="p-1.5 sm:p-2 bg-purple-500/10 text-purple-400 rounded-standard">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </span>
-          </div>
-          <div className="flex gap-2 items-center mb-1 sm:mb-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
-            <p className="text-lg sm:text-xl font-bold">Online</p>
-          </div>
-          <div className="flex items-center text-muted text-xs sm:text-sm">
-            <span className="inline-block w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
-            <span>All systems operational</span>
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Status</h2>
+                <div className="flex gap-2 items-center mb-1 sm:mb-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
+                  <p className="text-lg sm:text-xl font-bold">Online</p>
+                </div>
+                <div className="flex items-center text-muted text-xs sm:text-sm">
+                  <span className="inline-block w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  <span>All systems operational</span>
+                </div>
+              </div>
+              <div className="p-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       
       {/* Orders Table */}
       <div ref={ordersTableRef} className="container-card">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-          <h2 className="text-subtitle text-gray-200 mb-2 sm:mb-0">Recent Orders</h2>
-          <button onClick={() => router.push('/dashboard/orders')} className="btn-secondary">View All Orders</button>
+        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-white">Recent Orders</h2>
+          <button 
+            onClick={() => router.push('/dashboard/orders')}
+            className="px-4 py-2 text-sm text-gray-300 hover:text-white"
+          >
+            View All Orders
+          </button>
         </div>
         
         {orders.length === 0 ? (
@@ -284,14 +300,11 @@ export default function DashboardPage() {
         ) : (
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="min-w-[640px] px-4 sm:px-0">
-              <table className="w-full">
+              <table className="w-full border-separate border-spacing-0">
                 <thead>
-                  <tr className="text-left bg-gray-700/40">
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Order Number</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Customer</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Date</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Amount</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Status</th>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400 border-b border-gray-700">Order Number</th>
+                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-400 border-b border-gray-700">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -299,25 +312,10 @@ export default function DashboardPage() {
                     <tr 
                       key={order.id} 
                       onClick={() => router.push(`/dashboard/orders/${order.id}`)}
-                      className="border-t border-gray-700/30 hover:bg-gray-700/20 transition-colors cursor-pointer"
+                      className="h-16 hover:bg-gray-800/50"
                     >
-                      <td className="px-4 py-3 text-xs sm:text-sm font-medium text-white">#{order.order_number}</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-gray-300">
-                        {order.customer_first_name} {order.customer_last_name}
-                      </td>
-                      <td className="px-4 py-3 text-xs sm:text-sm text-gray-400">{format(new Date(order.created_at), 'MMM dd, yyyy')}</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm font-medium text-amber-500">€{Number(order.total_amount).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm">
-                        <span className={`
-                          ${order.status === 'pending' && 'tag-warning'}
-                          ${order.status === 'paid' && 'tag-success'}
-                          ${order.status === 'shipped' && 'tag-info'}
-                          ${order.status === 'completed' && 'tag-success'}
-                          ${order.status === 'cancelled' && 'tag-error'}
-                        `}>
-                          {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
-                      </td>
+                      <td className="px-6 whitespace-nowrap">#2025/07</td>
+                      <td className="px-6 text-right text-amber-500">€299.00</td>
                     </tr>
                   ))}
                 </tbody>
@@ -329,13 +327,19 @@ export default function DashboardPage() {
       
       {/* Products Table */}
       <div ref={productsTableRef} className="container-card">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6">
-          <h2 className="text-subtitle text-gray-200 mb-2 sm:mb-0">Products</h2>
-          <div className="flex gap-2">
-            <button onClick={() => router.push('/dashboard/products/new')} className="btn-primary">
+        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-white">Products</h2>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => router.push('/dashboard/products/new')}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            >
               Add Product
             </button>
-            <button onClick={() => router.push('/dashboard/products')} className="btn-secondary">
+            <button 
+              onClick={() => router.push('/dashboard/products')}
+              className="px-4 py-2 text-gray-300 hover:text-white"
+            >
               Manage Products
             </button>
           </div>
@@ -355,10 +359,8 @@ export default function DashboardPage() {
               <table className="w-full">
                 <thead>
                   <tr className="text-left bg-gray-700/40">
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Name</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Price</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Stock</th>
-                    <th className="px-4 py-3 text-xs sm:text-sm font-medium text-gray-300">Status</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-300">Name</th>
+                    <th className="px-6 py-4 text-right text-gray-300">Price</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -366,22 +368,10 @@ export default function DashboardPage() {
                     <tr 
                       key={product.id} 
                       onClick={() => router.push(`/dashboard/products/${product.id}`)}
-                      className="border-t border-gray-700/30 hover:bg-gray-700/20 transition-colors cursor-pointer"
+                      className="border-t border-gray-700/30 hover:bg-gray-700/20 transition-colors cursor-pointer h-16"
                     >
-                      <td className="px-4 py-3 text-xs sm:text-sm font-medium text-white">{product.name}</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm font-medium text-amber-500">€{Number(product.price).toFixed(2)}</td>
-                      <td className="px-4 py-3 text-xs sm:text-sm">
-                        {Number(product.stock) > 0 ? (
-                          <span className="text-white">{product.stock}</span>
-                        ) : (
-                          <span className="text-red-400">Out of stock</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-xs sm:text-sm">
-                        <span className={isProductActive(product) ? 'tag-success' : 'tag-error'}>
-                          {isProductActive(product) ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
+                      <td className="px-6 py-4 text-xs sm:text-sm font-medium text-white">{product.name}</td>
+                      <td className="px-6 py-4 text-xs sm:text-sm font-medium text-amber-500 text-right">€{Number(product.price).toFixed(2)}</td>
                     </tr>
                   ))}
                 </tbody>

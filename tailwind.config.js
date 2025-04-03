@@ -23,7 +23,10 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
+  plugins: [],
+  safelist: [
+    'container-card',
+    'btn-primary',
+    'btn-secondary'
+  ]
 } 

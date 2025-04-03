@@ -1,4 +1,4 @@
-// File: C:\Users\JJALa\Desktop\W4CAdminpanel\W4CAdminPanel\src\app\dashboard\looker-studio\page.tsx
+// File: C:\Users\jeffrey\Desktop\MAIN WHISKY\W4CAdminPanel\src\app\dashboard\looker-studio\page.tsx
 import * as entry from '../../../../../src/app/dashboard/looker-studio/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

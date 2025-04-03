@@ -13,7 +13,6 @@ export default function LookerStudio() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dashboardType, setDashboardType] = useState<'sales' | 'inventory' | 'customers'>('sales');
   const contentRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -39,19 +38,6 @@ export default function LookerStudio() {
     }
   }, [loading]);
   
-  // Dashboard URL selecteren op basis van type
-  const getDashboardUrl = () => {
-    switch(dashboardType) {
-      case 'inventory':
-        return 'https://lookerstudio.google.com/embed/reporting/461ea548-8b26-457f-b40d-d60a6991c0b2/page/mL4xB';
-      case 'customers':
-        return 'https://lookerstudio.google.com/embed/reporting/d148ea77-93ad-44b1-a475-142e5f529128/page/p_3h9edzv0c';
-      case 'sales':
-      default:
-        return 'https://lookerstudio.google.com/embed/reporting/a2b98320-db81-4585-8369-7eb86e0968f6/page/kIV1C';
-    }
-  };
-  
   if (authLoading) {
     return <LoadingSpinner message="Authenticeren..." size="large" centered />;
   }
@@ -67,7 +53,7 @@ export default function LookerStudio() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Looker Studio Dashboards</h1>
+        <h1 className="text-2xl font-bold">Looker Studio Dashboard</h1>
         <div className="flex gap-2">
           <Link
             href="/dashboard/analytics"
@@ -86,40 +72,6 @@ export default function LookerStudio() {
         </div>
       </div>
       
-      {/* Dashboard selector tabs */}
-      <div className="flex border-b border-gray-700 mb-6">
-        <button
-          onClick={() => setDashboardType('sales')}
-          className={`py-2 px-4 font-medium text-sm ${
-            dashboardType === 'sales' 
-              ? 'text-blue-400 border-b-2 border-blue-400' 
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          Verkoopdashboard
-        </button>
-        <button
-          onClick={() => setDashboardType('inventory')}
-          className={`py-2 px-4 font-medium text-sm ${
-            dashboardType === 'inventory' 
-              ? 'text-blue-400 border-b-2 border-blue-400' 
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          Voorraaddashboard
-        </button>
-        <button
-          onClick={() => setDashboardType('customers')}
-          className={`py-2 px-4 font-medium text-sm ${
-            dashboardType === 'customers' 
-              ? 'text-blue-400 border-b-2 border-blue-400' 
-              : 'text-gray-400 hover:text-gray-300'
-          }`}
-        >
-          Klantendashboard
-        </button>
-      </div>
-      
       <div ref={contentRef} className="space-y-6">
         <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
           <div className="flex items-center mb-4">
@@ -127,17 +79,15 @@ export default function LookerStudio() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <h2 className="text-xl font-semibold">
-              Whisky For Charity - {dashboardType === 'sales' ? 'Verkoopdashboard' : dashboardType === 'inventory' ? 'Voorraaddashboard' : 'Klantendashboard'}
+              Whisky For Charity - Verkoopdashboard
             </h2>
           </div>
           
-          {/* Looker Studio iframe met sample dashboard */}
           <div className="border border-gray-600 rounded-lg bg-gray-900 p-4 sm:p-6 relative overflow-hidden">
-            {/* Echte Looker Studio embed */}
             <iframe 
               width="100%" 
               height="600" 
-              src={getDashboardUrl()}
+              src="https://lookerstudio.google.com/embed/reporting/a2b98320-db81-4585-8369-7eb86e0968f6/page/kIV1C"
               frameBorder="0" 
               style={{border: 0}}
               allowFullScreen
@@ -170,20 +120,8 @@ export default function LookerStudio() {
                 <span>Maandelijks omzetoverzicht</span>
               </li>
               <li className="flex items-center">
-                <span className="w-2 h-2 mr-2 bg-purple-500 rounded-full"></span>
-                <span>Klantenactiviteit en retentie</span>
-              </li>
-              <li className="flex items-center">
                 <span className="w-2 h-2 mr-2 bg-amber-500 rounded-full"></span>
                 <span>Winst per product</span>
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 mr-2 bg-red-500 rounded-full"></span>
-                <span>Voorraadniveaus en waarschuwingen</span>
-              </li>
-              <li className="flex items-center">
-                <span className="w-2 h-2 mr-2 bg-cyan-500 rounded-full"></span>
-                <span>Marketing ROI en conversie</span>
               </li>
             </ul>
           </div>

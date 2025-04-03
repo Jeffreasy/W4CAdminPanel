@@ -3,7 +3,7 @@ import { useRef, useEffect } from 'react';
 import { FiAlertTriangle, FiInfo, FiAlertCircle, FiX } from 'react-icons/fi';
 import { animate } from '../../utils/animations';
 
-export interface ErrorMessageProps {
+interface ErrorMessageProps {
   /** De foutmelding om weer te geven */
   message: string | React.ReactNode;
   
@@ -24,6 +24,9 @@ export interface ErrorMessageProps {
   
   /** Callback die wordt aangeroepen wanneer het bericht wordt gesloten */
   onClose?: () => void;
+  
+  /** Of de foutmelding gecentreerd moet worden */
+  centered?: boolean;
 }
 
 /**
@@ -36,7 +39,8 @@ export default function ErrorMessage({
   action,
   animation,
   className = '',
-  onClose
+  onClose,
+  centered = false
 }: ErrorMessageProps) {
   // Ref voor animatie
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,6 +73,7 @@ export default function ErrorMessage({
     flex items-start p-3 border rounded-md
     ${variantStyles[variant].containerClass}
     ${className}
+    ${centered ? 'flex items-center justify-center min-h-[200px]' : 'flex items-center'}
   `;
 
   return (

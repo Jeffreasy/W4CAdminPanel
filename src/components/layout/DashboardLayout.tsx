@@ -8,7 +8,6 @@ import {
   UsersIcon,
   FolderIcon,
   CurrencyDollarIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'

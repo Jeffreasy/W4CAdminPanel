@@ -1,4 +1,19 @@
 {
+  "/_not-found": "app/_not-found.js",
+  "/page": "app/page.js",
+  "/dashboard/content/aboutpage/page": "app/dashboard/content/aboutpage/page.js",
+  "/dashboard/content/artpage/page": "app/dashboard/content/artpage/page.js",
+  "/dashboard/content/charitypage/page": "app/dashboard/content/charitypage/page.js",
+  "/dashboard/analytics/page": "app/dashboard/analytics/page.js",
+  "/dashboard/content/whiskypage/page": "app/dashboard/content/whiskypage/page.js",
+  "/dashboard/content/page": "app/dashboard/content/page.js",
+  "/dashboard/content/homepage/page": "app/dashboard/content/homepage/page.js",
+  "/dashboard/looker-studio/page": "app/dashboard/looker-studio/page.js",
+  "/dashboard/orders/page": "app/dashboard/orders/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/looker-studio/page": "app/dashboard/looker-studio/page.js"
+  "/dashboard/orders/[id]/page": "app/dashboard/orders/[id]/page.js",
+  "/dashboard/products/[id]/page": "app/dashboard/products/[id]/page.js",
+  "/dashboard/products/new/page": "app/dashboard/products/new/page.js",
+  "/dashboard/products/page": "app/dashboard/products/page.js",
+  "/login/page": "app/login/page.js"
 }
