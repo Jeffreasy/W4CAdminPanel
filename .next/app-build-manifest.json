@@ -22,15 +22,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/content/page.js"
     ],
-    "/dashboard/content/homepage/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/content/homepage/page.js"
-    ],
     "/dashboard/orders/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/orders/page.js"
+    ],
+    "/dashboard/content/homepage/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/content/homepage/page.js"
     ],
     "/dashboard/content/aboutpage/page": [
       "static/chunks/webpack.js",
@@ -41,16 +41,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/content/charitypage/page.js"
-    ],
-    "/dashboard/content/artpage/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/content/artpage/page.js"
-    ],
-    "/dashboard/content/whiskypage/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/content/whiskypage/page.js"
     ]
   }
 }

@@ -163,23 +163,23 @@ export default function DashboardPage() {
       {/* Welkom Banner */}
       <div 
         ref={welcomeRef} 
-        className="container-card"
+        className="container-card p-0"
       >
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 sm:p-6">
           <div className="px-6 py-4">
             <h1 className="text-2xl font-semibold text-white mb-1">Welcome back</h1>
             <p className="text-gray-400">{user.email}</p>
           </div>
-          <div className="flex items-center gap-4 px-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 px-6 pb-4 sm:px-0 sm:pb-0">
             <button
               onClick={() => router.push('/dashboard/analytics')}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="btn-primary px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
             >
               Analytics
             </button>
             <button
               onClick={() => signOut()}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+              className="btn-danger px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
             >
               Sign Out
             </button>
@@ -279,11 +279,11 @@ export default function DashboardPage() {
       
       {/* Orders Table */}
       <div ref={ordersTableRef} className="container-card">
-        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <h2 className="text-lg font-medium text-white">Recent Orders</h2>
           <button 
             onClick={() => router.push('/dashboard/orders')}
-            className="px-4 py-2 text-sm text-gray-300 hover:text-white"
+            className="btn-secondary px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm self-start sm:self-center"
           >
             View All Orders
           </button>
@@ -327,18 +327,18 @@ export default function DashboardPage() {
       
       {/* Products Table */}
       <div ref={productsTableRef} className="container-card">
-        <div className="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-lg font-medium text-white">Products</h2>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 self-start sm:self-auto">
             <button 
               onClick={() => router.push('/dashboard/products/new')}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="btn-primary px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
             >
               Add Product
             </button>
             <button 
               onClick={() => router.push('/dashboard/products')}
-              className="px-4 py-2 text-gray-300 hover:text-white"
+              className="btn-secondary px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
             >
               Manage Products
             </button>
