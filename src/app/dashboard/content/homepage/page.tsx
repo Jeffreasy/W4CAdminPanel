@@ -5,6 +5,7 @@ import { useAuth } from '../../../../contexts/AuthContext'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import LoadingSpinner from '../../../../components/ui/LoadingSpinner'
 import ErrorMessage from '../../../../components/ui/ErrorMessage'
+import { TextSectionPreview } from '../../../../components/preview/TextSectionPreview'
 import toast from 'react-hot-toast'
 
 interface HomeSection {
@@ -108,93 +109,105 @@ export default function HomeContentManagement() {
         <h1 className="text-2xl font-bold">Home Content Management</h1>
       </div>
 
-      <div className="grid gap-6">
-        {sections.map((section) => (
-          <div key={section.id} className="container-card p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-200">
-                  {section.section_key.replace(/_/g, ' ').toUpperCase()}
-                </h2>
-                <p className="text-sm text-gray-400">Type: {section.style_type}</p>
-              </div>
-              <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-300">
-                v{section.version}
-              </span>
-            </div>
+      {/* Preview Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Live Voorbeeld Homepage</h2>
+        <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50 shadow-inner">
+           <TextSectionPreview sections={sections} />
+        </div>
+      </div>
 
-            {editingSection === section.id ? (
-              <div className="space-y-4">
-                {section.style_type === 'image' ? (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+      {/* Content Management Section */}
+      <div>
+        <h2 className="text-xl font-semibold mb-4">Bewerk Secties</h2>
+        <div className="grid gap-6">
+          {sections.map((section) => (
+            <div key={section.id} className="container-card p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-200">
+                    {section.section_key.replace(/_/g, ' ').toUpperCase()}
+                  </h2>
+                  <p className="text-sm text-gray-400">Type: {section.style_type}</p>
+                </div>
+                <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-300">
+                  v{section.version}
+                </span>
+              </div>
+
+              {editingSection === section.id ? (
+                <div className="space-y-4">
+                  {section.style_type === 'image' ? (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        defaultValue={section.content}
+                        id={`edit-${section.id}`}
+                        placeholder="Enter image URL or ID"
+                      />
+                      {section.content && (
+                        <div className="mt-2">
+                          <img 
+                            src={section.content} 
+                            alt="Preview" 
+                            className="max-w-full h-auto rounded"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <textarea
+                      className="w-full h-32 px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                       defaultValue={section.content}
                       id={`edit-${section.id}`}
-                      placeholder="Enter image URL or ID"
                     />
-                    {section.content && (
-                      <div className="mt-2">
-                        <img 
-                          src={section.content} 
-                          alt="Preview" 
-                          className="max-w-full h-auto rounded"
-                        />
-                      </div>
-                    )}
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      className="btn-primary"
+                      onClick={() => {
+                        const element = document.getElementById(`edit-${section.id}`) as HTMLInputElement | HTMLTextAreaElement
+                        if (!element) return
+                        const newContent = element.value
+                        updateSection(section.id, newContent)
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="btn-secondary"
+                      onClick={() => setEditingSection(null)}
+                    >
+                      Cancel
+                    </button>
                   </div>
-                ) : (
-                  <textarea
-                    className="w-full h-32 px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                    defaultValue={section.content}
-                    id={`edit-${section.id}`}
-                  />
-                )}
-                <div className="flex gap-2">
-                  <button
-                    className="btn-primary"
-                    onClick={() => {
-                      const element = document.getElementById(`edit-${section.id}`) as HTMLInputElement | HTMLTextAreaElement
-                      if (!element) return
-                      const newContent = element.value
-                      updateSection(section.id, newContent)
-                    }}
-                  >
-                    Save
-                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {section.style_type === 'image' ? (
+                    <div>
+                      <img 
+                        src={section.content} 
+                        alt={section.section_key} 
+                        className="max-w-full h-auto rounded"
+                      />
+                      <p className="mt-2 text-sm text-gray-400">{section.content}</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-300">{section.content}</p>
+                  )}
                   <button
                     className="btn-secondary"
-                    onClick={() => setEditingSection(null)}
+                    onClick={() => setEditingSection(section.id)}
                   >
-                    Cancel
+                    Edit
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {section.style_type === 'image' ? (
-                  <div>
-                    <img 
-                      src={section.content} 
-                      alt={section.section_key} 
-                      className="max-w-full h-auto rounded"
-                    />
-                    <p className="mt-2 text-sm text-gray-400">{section.content}</p>
-                  </div>
-                ) : (
-                  <p className="text-gray-300">{section.content}</p>
-                )}
-                <button
-                  className="btn-secondary"
-                  onClick={() => setEditingSection(section.id)}
-                >
-                  Edit
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
