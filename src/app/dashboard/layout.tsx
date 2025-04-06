@@ -1,17 +1,30 @@
 'use client'
 
-import React from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { Inter } from 'next/font/google'
-import { AuthProvider } from '../../contexts/AuthContext'
-import { useEffect, useState } from 'react'
+import { AuthProvider, useAuth } from '../../contexts/AuthContext'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Toaster } from 'react-hot-toast'
+import { Toaster, toast } from 'react-hot-toast'
 import { animate, animateStaggered } from '../../utils/animations'
-import { HomeIcon, FolderIcon, CurrencyDollarIcon, ChartBarIcon, DocumentChartBarIcon } from '@heroicons/react/24/outline'
+import { HomeIcon, FolderIcon, CurrencyDollarIcon, ChartBarIcon, DocumentChartBarIcon, XMarkIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline'
+import DashboardChat, { DashboardChatHandle } from '../../components/dashboard/DashboardChat'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
+import WelcomeModal from '../../components/dashboard/WelcomeModal'
 
 // Admin styles
 import '../globals.css'
+
+// Interface for comments (can be shared or redefined)
+interface Comment {
+  id: string;
+  created_at: string;
+  user_id: string | null;
+  user_email: string | null;
+  content: string;
+  context?: string | null;
+}
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -50,8 +63,114 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
   const [isMounted, setIsMounted] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  
+  const { user, isLoading: isAuthLoading } = useAuth()
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+  const supabase = createClientComponentClient();
+  const chatRef = useRef<DashboardChatHandle>(null);
+
+  // --- NEW: State and Logic for Comments ---
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+
+  // Fetch comments function (moved here)
+  const fetchComments = useCallback(async () => {
+    // Only fetch if needed (e.g., chat open or modal needs it), or always fetch?
+    // Let's fetch always initially for the modal preview.
+    console.log("Fetching comments...");
+    setCommentsLoading(true);
+    setCommentsError(null);
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_comments')
+        .select('*')
+        .order('created_at', { ascending: true }); // Fetch all initially
+
+      if (error) throw error;
+      setComments(data || []);
+      console.log("Comments fetched successfully:", data?.length);
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+      setCommentsError(err instanceof Error ? err.message : "Failed to fetch comments");
+      setComments([]);
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [supabase]);
+
+  // Initial fetch for comments
+  useEffect(() => {
+      fetchComments();
+  }, [fetchComments]);
+
+  // Real-time subscription (moved here)
+  useEffect(() => {
+    const channel = supabase
+      .channel('dashboard-comments-realtime')
+      .on(
+        'postgres_changes',
+        // Listen to INSERT, UPDATE, DELETE for full sync
+        { event: '*', schema: 'public', table: 'dashboard_comments' }, 
+        (payload) => {
+          console.log('Realtime comment change received:', payload);
+          // More robust handling for different events
+          if (payload.eventType === 'INSERT') {
+             setComments((currentComments) => [
+                 ...currentComments, 
+                 payload.new as Comment
+             ]);
+          }
+          // Add handling for UPDATE and DELETE if needed (e.g., update content, filter out deleted)
+          // else if (payload.eventType === 'UPDATE') { ... }
+          // else if (payload.eventType === 'DELETE') { ... }
+          // Simple refetch on any change is also an option:
+          // fetchComments(); 
+        }
+      )
+      .subscribe((status, err) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('Subscribed to comment updates!');
+          } 
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              console.error('Realtime subscription error:', err);
+              setCommentsError("Realtime connection failed. Please refresh.");
+          }
+      });
+
+    return () => {
+      console.log('Unsubscribing from comment updates');
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, fetchComments]); // Added fetchComments dependency if refetching is used
+
+  // Add comment function (defined here)
+  const addComment = async (content: string): Promise<void> => {
+     if (!content.trim() || !user) {
+         toast.error("Cannot send empty message or not logged in.");
+         return Promise.reject("Empty message or not logged in");
+     }
+
+     try {
+      const { error } = await supabase
+        .from('dashboard_comments')
+        .insert({
+          user_id: user.id,
+          user_email: user.email,
+          content: content.trim(),
+          // context: 'dashboard' // Add context if needed
+        });
+
+      if (error) throw error;
+       // No need to manually add, real-time should handle it
+       return Promise.resolve();
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      toast.error(err instanceof Error ? err.message : "Failed to send comment");
+      return Promise.reject(err instanceof Error ? err.message : "Failed to send comment");
+    } 
+  }
+
+  // --- Existing useEffects (Animations, Welcome Message) ---
   useEffect(() => {
     setIsMounted(true)
     
@@ -78,14 +197,63 @@ export default function DashboardLayout({
         ease: 'power2.out'
       });
     }
-    
-    // Close mobile menu when navigating
-    setMobileMenuOpen(false)
   }, [isMounted, pathname])
+  
+  // --- UPDATED: Welcome Message Logic (using state, not toast) ---
+  useEffect(() => {
+     console.log("DashboardLayout useEffect running. Auth Loading:", isAuthLoading, "User:", user);
+    if (!isAuthLoading && user) {
+      const welcomeShown = sessionStorage.getItem('welcomeMessageShown');
+      console.log(`Value retrieved from sessionStorage['welcomeMessageShown']:`, welcomeShown);
+      if (!welcomeShown) {
+        console.log("User logged in and message not shown this session. Setting showWelcomeMessage to true...");
+        setShowWelcomeMessage(true);
+        sessionStorage.setItem('welcomeMessageShown', 'true');
+      } else {
+         console.log("Auth loaded, user exists, but welcome message already shown this session.");
+      }
+    } else if (!isAuthLoading && !user) {
+        console.log("Auth loaded but no user exists.");
+    } else { 
+        console.log("Auth is still loading...");
+    }
+  }, [user, isAuthLoading]);
   
   const isActive = (path: string) => {
     return pathname === path || 
            (path !== '/dashboard' && pathname?.startsWith(path))
+  }
+
+  // --- Changelog Data ---
+  // Define the changelog content - Keep this updated!
+  const changelogItems = [
+    "Vercel Analytics added.",
+    "Homepage content management refactored.",
+    "Added 'Hero Circle' section management.",
+    "Added welcome/changelog notification.",
+    "Corrected dashboard layout implementation.",
+    "Centered welcome message with blur background.",
+    "Added dashboard chat feature.",
+    "Integrated chat preview into welcome message.",
+    "Added direct reply & open chat from welcome message."
+  ];
+
+  // Format timestamp function (moved here or keep in chat component and pass down? Moved here for now)
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      return new Date(timestamp).toLocaleString('nl-NL', { 
+          dateStyle: 'short', 
+          timeStyle: 'short' 
+      });
+    } catch (e) {
+        return "Invalid date";
+    }
+  };
+
+  // --- Handler for Open Chat button ---
+  const handleOpenChat = () => {
+     setShowWelcomeMessage(false); // Sluit de modal eerst
+     chatRef.current?.openChat(); // Open dan de chat
   }
 
   return (
@@ -113,6 +281,21 @@ export default function DashboardLayout({
           },
         }}
       />
+      
+      {/* --- NIEUW: Render de WelcomeModal component --- */}
+      <WelcomeModal
+          isOpen={showWelcomeMessage}
+          onClose={() => setShowWelcomeMessage(false)}
+          onOpenChat={handleOpenChat} // Nieuwe handler doorgeven
+          user={user}
+          comments={comments}
+          commentsLoading={commentsLoading}
+          commentsError={commentsError}
+          addComment={addComment} // Functie doorgeven
+          formatTimestamp={formatTimestamp} // Functie doorgeven
+          changelogItems={changelogItems} // Changelog doorgeven
+      />
+
       <main className="bg-gray-900 text-white min-h-screen">
         {/* Fixed header with z-index to display above main content */}
         <header className="admin-header fixed top-0 left-0 right-0 bg-header border-standard py-3 z-20 shadow-standard">
@@ -177,6 +360,16 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+      
+      {/* Render Chat Component with Ref */}
+      <DashboardChat 
+          ref={chatRef}
+          comments={comments}
+          addComment={addComment}
+          isLoading={commentsLoading}
+          error={commentsError}
+          formatTimestamp={formatTimestamp}
+      />
     </AuthProvider>
   )
 } 
