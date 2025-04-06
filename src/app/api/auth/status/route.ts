@@ -2,16 +2,15 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-// BELANGRIJK: Ingevulde URL van je hoofdwebsite
-// --- AANGEPAST: Origin van de frontend app die deze API aanroept ---
-const MAIN_APP_ORIGIN = 'http://localhost:3001'
+// Gebruik environment variable voor de frontend origin, met fallback voor lokaal
+const MAIN_APP_ORIGIN = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'http://localhost:3001'; // Fallback voor lokaal
 
 export async function GET(request: Request) {
   const supabase = createRouteHandlerClient({ cookies })
   const headers = new Headers()
 
   // --- CORS Headers ---
-  headers.set('Access-Control-Allow-Origin', MAIN_APP_ORIGIN)
+  headers.set('Access-Control-Allow-Origin', MAIN_APP_ORIGIN) // Gebruik variabele
   headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   headers.set('Access-Control-Allow-Credentials', 'true')
@@ -56,8 +55,7 @@ export async function GET(request: Request) {
 // --- OPTIONS Request Handler (Nodig voor preflight requests met credentials) ---
 export async function OPTIONS(request: Request) {
   const headers = new Headers()
-  // --- AANGEPAST: Origin van de frontend app die deze API aanroept ---
-  headers.set('Access-Control-Allow-Origin', MAIN_APP_ORIGIN);
+  headers.set('Access-Control-Allow-Origin', MAIN_APP_ORIGIN); // Gebruik variabele
   headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   headers.set('Access-Control-Allow-Credentials', 'true');
