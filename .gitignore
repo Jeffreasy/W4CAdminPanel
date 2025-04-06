@@ -1,1 +1,7 @@
 node_modules
+.next
+
+# Optional: Add other common Next.js/Node ignores
+#.env*.local
+#.env
+#*.log

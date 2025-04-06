@@ -5,10 +5,12 @@ import { useAuth } from '../../../../contexts/AuthContext'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import LoadingSpinner from '../../../../components/ui/LoadingSpinner'
 import ErrorMessage from '../../../../components/ui/ErrorMessage'
-import { TextSectionPreview } from '../../../../components/preview/TextSectionPreview'
 import toast from 'react-hot-toast'
+import { TextTabContent } from './content/TextTabContent'
+import { CirclesTabContent } from './content/CirclesTabContent'
+import { HeroCircleTabContent } from './content/HeroCircleTabContent'
 
-interface HomeSection {
+export interface HomeSection {
   id: string
   section_key: string
   content: string
@@ -20,6 +22,50 @@ interface HomeSection {
   last_edited_by?: string
 }
 
+export interface CircleSection {
+  id: string
+  href: string
+  text: string
+  circle_size_desktop: number
+  circle_size_tablet?: number
+  circle_size_mobile?: number
+  border_width: number
+  border_color: string
+  border_style: string
+  font_size_desktop: number
+  font_size_tablet?: number
+  font_size_mobile?: number
+  font_weight: string
+  text_color: string
+  rotation_duration: number
+  hover_scale: number
+  animation_ease: string
+  glow_background: string
+  glow_shadow: string
+  glow_intensity: number
+  glow_duration: number
+  gap_desktop?: number
+  gap_tablet?: number
+  gap_mobile?: number
+  order_number?: number
+  is_active?: boolean
+  status?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CircleHeroItem {
+  id: string;
+  image_src: string;
+  image_alt: string;
+  url: string;
+  word: string;
+  is_active: boolean;
+  order_number: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 interface SupabaseError {
   message: string
   details?: string
@@ -27,80 +73,197 @@ interface SupabaseError {
 }
 
 export default function HomeContentManagement() {
-  const [sections, setSections] = useState<HomeSection[]>([])
-  const [loading, setLoading] = useState(true)
+  const [textSections, setTextSections] = useState<HomeSection[]>([])
+  const [circleSections, setCircleSections] = useState<CircleSection[]>([])
+  const [loadingText, setLoadingText] = useState(true)
+  const [loadingCircles, setLoadingCircles] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editingSection, setEditingSection] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'text' | 'circles' | 'hero'>('text')
+  const [circleHeroItems, setCircleHeroItems] = useState<CircleHeroItem[]>([])
+  const [loadingHeroItems, setLoadingHeroItems] = useState(true)
   const supabase = createClientComponentClient()
   const { user } = useAuth()
 
+  const isLoading = loadingText || loadingCircles || loadingHeroItems
+
   useEffect(() => {
-    fetchSections()
+    fetchTextSections()
+    fetchCircleSections()
+    fetchCircleHeroItems()
   }, [])
 
-  async function fetchSections() {
+  async function fetchTextSections() {
+    setLoadingText(true)
     try {
       const { data, error } = await supabase
         .from('text_sections')
         .select('*')
         .order('order_number')
-
-      if (error) {
-        const supabaseError = error as SupabaseError
-        throw new Error(`Database error: ${supabaseError.message}${supabaseError.details ? ` - ${supabaseError.details}` : ''}`)
-      }
-
-      if (!data) {
-        throw new Error('No data received from database')
-      }
-
-      setSections(data)
+      if (error) throw error
+      if (!data) throw new Error('No text data received')
+      setTextSections(data)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch home sections'
-      setError(errorMessage)
-      console.error('Error fetching home sections:', err)
+      const errorMessage = err instanceof Error ? `Failed to fetch text sections: ${err.message}` : 'Failed to fetch text sections'
+      setError(prev => prev ? `${prev}\n${errorMessage}` : errorMessage)
+      console.error('Error fetching text sections:', err)
     } finally {
-      setLoading(false)
+      setLoadingText(false)
     }
   }
 
-  async function updateSection(id: string, newContent: string) {
-    if (!user?.email) {
-      toast.error('You must be logged in to make changes')
-      return
-    }
-
+  async function fetchCircleSections() {
+    setLoadingCircles(true)
     try {
-      const currentSection = sections.find(s => s.id === id)
-      if (!currentSection) {
-        throw new Error('Section not found')
-      }
+      const { data, error } = await supabase
+        .from('circle_sections')
+        .select('*')
+        .order('order_number')
+      if (error) throw error
+      if (!data) throw new Error('No circle data received')
+      setCircleSections(data as CircleSection[])
+    } catch (err) {
+      const errorMessage = err instanceof Error ? `Failed to fetch circle sections: ${err.message}` : 'Failed to fetch circle sections'
+      setError(prev => prev ? `${prev}\n${errorMessage}` : errorMessage)
+      console.error('Error fetching circle sections:', err)
+    } finally {
+      setLoadingCircles(false)
+    }
+  }
 
+  async function fetchCircleHeroItems() {
+    setLoadingHeroItems(true)
+    try {
+      const { data, error } = await supabase
+        .from('circle_hero_items')
+        .select('*')
+        .order('order_number')
+      if (error) throw error
+      if (!data) throw new Error('No circle hero data received')
+      setCircleHeroItems(data as CircleHeroItem[])
+    } catch (err) {
+      const errorMessage = err instanceof Error ? `Failed to fetch hero items: ${err.message}` : 'Failed to fetch hero items'
+      setError(prev => prev ? `${prev}\n${errorMessage}` : errorMessage)
+      console.error('Error fetching hero items:', err)
+    } finally {
+      setLoadingHeroItems(false)
+    }
+  }
+
+  async function updateTextSection(id: string, newContent: string): Promise<void> {
+    if (!user?.email) {
+       toast.error('Login required')
+       return Promise.reject('Login required')
+    }
+    try {
+      const currentSection = textSections.find(s => s.id === id)
+      if (!currentSection) throw new Error('Text section not found')
       const { error } = await supabase
         .from('text_sections')
-        .update({ 
-          content: newContent,
-          updated_at: new Date().toISOString(),
-          version: currentSection.version + 1
-        })
+        .update({ content: newContent, updated_at: new Date().toISOString(), version: currentSection.version + 1 })
         .eq('id', id)
-
-      if (error) {
-        const supabaseError = error as SupabaseError
-        throw new Error(`Database error: ${supabaseError.message}${supabaseError.details ? ` - ${supabaseError.details}` : ''}`)
-      }
-
-      toast.success('Home content updated successfully')
-      await fetchSections()
-      setEditingSection(null)
+      if (error) throw error
+      toast.success('Text content updated')
+      await fetchTextSections()
+      return Promise.resolve()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update home content'
-      toast.error(errorMessage)
-      console.error('Error updating home section:', err)
+      const errorMsg = err instanceof Error ? `Update failed: ${err.message}` : 'Update failed'
+      toast.error(errorMsg)
+      console.error('Error updating text section:', err)
+      return Promise.reject(errorMsg)
     }
   }
 
-  if (loading) return <LoadingSpinner size="large" message="Loading home content..." centered />
+  async function updateCircleSection(id: string, updatedFields: Partial<CircleSection>): Promise<void> {
+    if (!user?.email) { 
+      toast.error('Login required')
+      return Promise.reject('Login required')
+    }
+    try {
+      updatedFields.updated_at = new Date().toISOString();
+      
+      const { error } = await supabase
+        .from('circle_sections')
+        .update(updatedFields)
+        .eq('id', id)
+      if (error) throw error
+      toast.success('Circle section updated')
+      await fetchCircleSections()
+      return Promise.resolve()
+    } catch (err) {
+       const errorMsg = err instanceof Error ? `Update failed: ${err.message}` : 'Update failed'
+       toast.error(errorMsg)
+       console.error('Error updating circle section:', err)
+       return Promise.reject(errorMsg)
+    }
+  }
+
+  async function addCircleHeroItem(newItem: Omit<CircleHeroItem, 'id' | 'created_at' | 'updated_at'>): Promise<void> {
+    if (!user?.email) {
+      toast.error('Login required');
+      return Promise.reject('Login required');
+    }
+    try {
+      const { error } = await supabase
+        .from('circle_hero_items')
+        .insert([{ ...newItem }])
+      if (error) throw error;
+      toast.success('Hero item added');
+      await fetchCircleHeroItems();
+      return Promise.resolve();
+    } catch (err) {
+      const errorMsg = err instanceof Error ? `Add failed: ${err.message}` : 'Add failed';
+      toast.error(errorMsg);
+      console.error('Error adding hero item:', err);
+      return Promise.reject(errorMsg);
+    }
+  }
+
+  async function updateCircleHeroItem(id: string, updatedFields: Partial<Omit<CircleHeroItem, 'id' | 'created_at'>>): Promise<void> {
+    if (!user?.email) {
+      toast.error('Login required');
+      return Promise.reject('Login required');
+    }
+    try {
+      updatedFields.updated_at = new Date().toISOString();
+      const { error } = await supabase
+        .from('circle_hero_items')
+        .update(updatedFields)
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Hero item updated');
+      await fetchCircleHeroItems();
+      return Promise.resolve();
+    } catch (err) {
+      const errorMsg = err instanceof Error ? `Update failed: ${err.message}` : 'Update failed';
+      toast.error(errorMsg);
+      console.error('Error updating hero item:', err);
+      return Promise.reject(errorMsg);
+    }
+  }
+
+  async function deleteCircleHeroItem(id: string): Promise<void> {
+    if (!user?.email) {
+      toast.error('Login required');
+      return Promise.reject('Login required');
+    }
+    try {
+      const { error } = await supabase
+        .from('circle_hero_items')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Hero item deleted');
+      await fetchCircleHeroItems();
+      return Promise.resolve();
+    } catch (err) {
+      const errorMsg = err instanceof Error ? `Delete failed: ${err.message}` : 'Delete failed';
+      toast.error(errorMsg);
+      console.error('Error deleting hero item:', err);
+      return Promise.reject(errorMsg);
+    }
+  }
+
+  if (isLoading) return <LoadingSpinner size="large" message="Loading home content..." centered />
   if (error) return <ErrorMessage message={error} />
 
   return (
@@ -109,106 +272,55 @@ export default function HomeContentManagement() {
         <h1 className="text-2xl font-bold">Home Content Management</h1>
       </div>
 
-      {/* Preview Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Live Voorbeeld Homepage</h2>
-        <div className="border border-gray-700 rounded-lg p-4 bg-gray-800/50 shadow-inner">
-           <TextSectionPreview sections={sections} />
-        </div>
+      <div className="flex border-b border-gray-700 mb-6">
+        <button
+          onClick={() => setActiveTab('text')}
+          className={`py-2 px-4 font-medium text-sm 
+            ${activeTab === 'text' 
+              ? 'border-b-2 border-blue-500 text-white' 
+              : 'text-gray-400 hover:text-gray-200'}`}
+        >
+          Text Sections
+        </button>
+        <button
+          onClick={() => setActiveTab('circles')}
+          className={`py-2 px-4 font-medium text-sm 
+            ${activeTab === 'circles' 
+              ? 'border-b-2 border-blue-500 text-white' 
+              : 'text-gray-400 hover:text-gray-200'}`}
+        >
+          Circle Sections
+        </button>
+        <button
+          onClick={() => setActiveTab('hero')}
+          className={`py-2 px-4 font-medium text-sm ${activeTab === 'hero' ? 'border-b-2 border-blue-500 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+        >
+          Hero Circle
+        </button>
       </div>
 
-      {/* Content Management Section */}
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Bewerk Secties</h2>
-        <div className="grid gap-6">
-          {sections.map((section) => (
-            <div key={section.id} className="container-card p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-200">
-                    {section.section_key.replace(/_/g, ' ').toUpperCase()}
-                  </h2>
-                  <p className="text-sm text-gray-400">Type: {section.style_type}</p>
-                </div>
-                <span className="px-2 py-1 text-xs rounded bg-gray-700 text-gray-300">
-                  v{section.version}
-                </span>
-              </div>
+      {activeTab === 'text' && (
+        <TextTabContent 
+          textSections={textSections} 
+          updateTextSection={updateTextSection} 
+        />
+      )}
 
-              {editingSection === section.id ? (
-                <div className="space-y-4">
-                  {section.style_type === 'image' ? (
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                        defaultValue={section.content}
-                        id={`edit-${section.id}`}
-                        placeholder="Enter image URL or ID"
-                      />
-                      {section.content && (
-                        <div className="mt-2">
-                          <img 
-                            src={section.content} 
-                            alt="Preview" 
-                            className="max-w-full h-auto rounded"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <textarea
-                      className="w-full h-32 px-4 py-2 bg-gray-700 border border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                      defaultValue={section.content}
-                      id={`edit-${section.id}`}
-                    />
-                  )}
-                  <div className="flex gap-2">
-                    <button
-                      className="btn-primary"
-                      onClick={() => {
-                        const element = document.getElementById(`edit-${section.id}`) as HTMLInputElement | HTMLTextAreaElement
-                        if (!element) return
-                        const newContent = element.value
-                        updateSection(section.id, newContent)
-                      }}
-                    >
-                      Save
-                    </button>
-                    <button
-                      className="btn-secondary"
-                      onClick={() => setEditingSection(null)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {section.style_type === 'image' ? (
-                    <div>
-                      <img 
-                        src={section.content} 
-                        alt={section.section_key} 
-                        className="max-w-full h-auto rounded"
-                      />
-                      <p className="mt-2 text-sm text-gray-400">{section.content}</p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-300">{section.content}</p>
-                  )}
-                  <button
-                    className="btn-secondary"
-                    onClick={() => setEditingSection(section.id)}
-                  >
-                    Edit
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+      {activeTab === 'circles' && (
+        <CirclesTabContent 
+          circleSections={circleSections} 
+          updateCircleSection={updateCircleSection} 
+        />
+      )}
+
+      {activeTab === 'hero' && (
+        <HeroCircleTabContent 
+          heroItems={circleHeroItems} 
+          addHeroItem={addCircleHeroItem}
+          updateHeroItem={updateCircleHeroItem}
+          deleteHeroItem={deleteCircleHeroItem}
+        />
+      )}
     </div>
   )
 } 
