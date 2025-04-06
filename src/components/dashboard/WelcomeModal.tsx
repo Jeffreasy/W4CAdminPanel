@@ -16,6 +16,13 @@ interface Comment {
   context?: string | null;
 }
 
+// --- AANGEPAST: Import/Define ChangelogItem type ---
+interface ChangelogItem {
+  id: string;
+  content: string;
+  created_at: string;
+}
+
 interface WelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,7 +33,10 @@ interface WelcomeModalProps {
   commentsError: string | null;
   addComment: (content: string) => Promise<void>;
   formatTimestamp: (timestamp: string) => string;
-  changelogItems: string[];
+  // --- AANGEPAST: Changelog props ---
+  changelogItems: ChangelogItem[];
+  changelogLoading: boolean;
+  changelogError: string | null;
 }
 
 export default function WelcomeModal({
@@ -39,7 +49,10 @@ export default function WelcomeModal({
   commentsError,
   addComment,
   formatTimestamp,
-  changelogItems
+  // --- AANGEPAST: Destructure new props ---
+  changelogItems,
+  changelogLoading,
+  changelogError
 }: WelcomeModalProps) {
   const [modalComment, setModalComment] = useState('');
   const [isSendingModalComment, setIsSendingModalComment] = useState(false);
@@ -85,12 +98,22 @@ export default function WelcomeModal({
           <div className="p-6 flex-1 space-y-4">
              <h2 className="text-lg font-semibold text-white">Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : '!'}</h2>
              
-             {/* Changelog Section */}
+             {/* --- AANGEPAST: Changelog Section met Loading/Error --- */}
              <div>
                <p className="text-sm font-semibold text-gray-300 mb-2">Recent Updates:</p>
-               <ul className="list-disc list-inside text-sm text-gray-400 space-y-1 max-h-36 overflow-y-auto pr-2 border-b border-gray-700 pb-3 mb-3">
-                 {changelogItems.map((item, index) => (<li key={index}>{item}</li>))}
-               </ul>
+               <div className="text-sm text-gray-400 space-y-1 max-h-36 overflow-y-auto pr-2 border-b border-gray-700 pb-3 mb-3">
+                 {changelogLoading && <p className="italic text-gray-500">Loading updates...</p>}
+                 {changelogError && <p className="text-red-400">Error: {changelogError}</p>}
+                 {!changelogLoading && !changelogError && changelogItems.length === 0 && (
+                    <p className="italic text-gray-500">No recent updates found.</p>
+                 )}
+                 {!changelogLoading && !changelogError && changelogItems.length > 0 && (
+                    <ul className="list-disc list-inside space-y-1">
+                       {/* Render item.content */} 
+                      {changelogItems.map((item) => (<li key={item.id}>{item.content}</li>))}
+                    </ul>
+                 )}
+               </div>
              </div>
 
              {/* Chat Preview Section */}

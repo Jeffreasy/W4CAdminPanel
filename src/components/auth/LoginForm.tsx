@@ -1,16 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+// Remove useRouter and createClientComponentClient imports
+// import { useRouter } from 'next/navigation'
+// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useAuth } from '../../contexts/AuthContext' // Import useAuth
 
 export default function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClientComponentClient()
+  // Remove router and supabase instances
+  // const router = useRouter()
+  // const supabase = createClientComponentClient()
+  const { signIn } = useAuth() // Get signIn function from context
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -18,17 +22,13 @@ export default function LoginForm() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) throw error
-
-      router.push('/dashboard')
-      router.refresh()
+      // Use the signIn function from the context
+      await signIn(email, password)
+      // Navigation is handled by the signIn function in the context
+      // router.push('/dashboard')
+      // router.refresh() 
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      setError(error instanceof Error ? error.message : 'Invalid login credentials') // More specific error
     } finally {
       setLoading(false)
     }

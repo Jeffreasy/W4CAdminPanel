@@ -26,6 +26,13 @@ interface Comment {
   context?: string | null;
 }
 
+// --- NIEUW: Definieer de ChangelogItem interface ---
+interface ChangelogItem {
+  id: string;
+  content: string;
+  created_at: string; // Optioneel: Kan gebruikt worden voor sorteren/tonen
+}
+
 const inter = Inter({ subsets: ['latin'] })
 
 const navItems = [
@@ -73,6 +80,11 @@ export default function DashboardLayout({
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentsError, setCommentsError] = useState<string | null>(null);
 
+  // --- NIEUW: State for Changelog --- 
+  const [changelogItems, setChangelogItems] = useState<ChangelogItem[]>([]);
+  const [changelogLoading, setChangelogLoading] = useState(true);
+  const [changelogError, setChangelogError] = useState<string | null>(null);
+
   // Fetch comments function (moved here)
   const fetchComments = useCallback(async () => {
     // Only fetch if needed (e.g., chat open or modal needs it), or always fetch?
@@ -95,6 +107,34 @@ export default function DashboardLayout({
       setComments([]);
     } finally {
       setCommentsLoading(false);
+    }
+  }, [supabase]);
+
+  // --- NIEUW: Fetch changelog function ---
+  const fetchChangelog = useCallback(async () => {
+    console.log("Fetching changelog items...");
+    setChangelogLoading(true);
+    setChangelogError(null);
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_changelog')
+        .select('id, content, created_at') // Selecteer benodigde velden
+        .eq('is_published', true)          // Alleen gepubliceerde items
+        .order('order_number', { ascending: false }) // Sorteer op order_number (hoogste eerst)
+        .order('created_at', { ascending: false }) // Daarna op datum (nieuwste eerst)
+        .limit(5); // Beperk tot de laatste 5 items
+
+      if (error) {
+        throw error;
+      }
+      console.log("Changelog items fetched successfully:", data.length);
+      setChangelogItems(data || []);
+    } catch (err) {
+      console.error("Error fetching changelog:", err);
+      setChangelogError(err instanceof Error ? err.message : "Failed to load changelog");
+      setChangelogItems([]); // Leegmaken bij fout
+    } finally {
+      setChangelogLoading(false);
     }
   }, [supabase]);
 
@@ -170,35 +210,23 @@ export default function DashboardLayout({
     } 
   }
 
-  // --- Existing useEffects (Animations, Welcome Message) ---
+  // UseEffect for fetching initial data (comments AND changelog)
   useEffect(() => {
-    setIsMounted(true)
-    
-    // Animate page entrance
-    if (isMounted) {
-      // Content fade in
-      animate('.admin-content', 'fadeInUp', { 
-        duration: 0.5, 
-        ease: 'power2.out' 
-      });
+    if (user) {
+      fetchComments();
+      fetchChangelog(); // Roep fetchChangelog aan als user ingelogd is
+
+      // Setup real-time subscription for comments
+      const channel = supabase.channel('realtime comments')
+        // ... bestaande subscription code ...
       
-      // Header slide in
-      animate('.admin-header', 'fadeInDown', { 
-        duration: 0.4, 
-        ease: 'power2.out' 
-      });
-      
-      // Nav items staggered animation
-      animateStaggered('.nav-item', { 
-        childAnimation: 'fadeInLeft',
-        duration: 0.3, 
-        staggerAmount: 0.1, 
-        delay: 0.2,
-        ease: 'power2.out'
-      });
+      return () => {
+        console.log("Unsubscribing from comment updates");
+        supabase.removeChannel(channel);
+      };
     }
-  }, [isMounted, pathname])
-  
+  }, [user, supabase, fetchComments, fetchChangelog]); // Voeg fetchChangelog toe aan dependencies
+
   // --- UPDATED: Welcome Message Logic (using state, not toast) ---
   useEffect(() => {
      console.log("DashboardLayout useEffect running. Auth Loading:", isAuthLoading, "User:", user);
@@ -224,20 +252,6 @@ export default function DashboardLayout({
            (path !== '/dashboard' && pathname?.startsWith(path))
   }
 
-  // --- Changelog Data ---
-  // Define the changelog content - Keep this updated!
-  const changelogItems = [
-    "Vercel Analytics added.",
-    "Homepage content management refactored.",
-    "Added 'Hero Circle' section management.",
-    "Added welcome/changelog notification.",
-    "Corrected dashboard layout implementation.",
-    "Centered welcome message with blur background.",
-    "Added dashboard chat feature.",
-    "Integrated chat preview into welcome message.",
-    "Added direct reply & open chat from welcome message."
-  ];
-
   // Format timestamp function (moved here or keep in chat component and pass down? Moved here for now)
   const formatTimestamp = (timestamp: string) => {
     try {
@@ -254,6 +268,11 @@ export default function DashboardLayout({
   const handleOpenChat = () => {
      setShowWelcomeMessage(false); // Sluit de modal eerst
      chatRef.current?.openChat(); // Open dan de chat
+  }
+
+  // Render null or a loader while auth is loading
+  if (isAuthLoading) {
+    return <div className="flex justify-center items-center min-h-screen bg-gray-900"><LoadingSpinner message="Loading dashboard..." /></div>;
   }
 
   return (
@@ -282,18 +301,21 @@ export default function DashboardLayout({
         }}
       />
       
-      {/* --- NIEUW: Render de WelcomeModal component --- */}
+      {/* --- Render de WelcomeModal component (nu met changelog props) --- */}
       <WelcomeModal
           isOpen={showWelcomeMessage}
           onClose={() => setShowWelcomeMessage(false)}
-          onOpenChat={handleOpenChat} // Nieuwe handler doorgeven
+          onOpenChat={handleOpenChat}
           user={user}
           comments={comments}
           commentsLoading={commentsLoading}
           commentsError={commentsError}
-          addComment={addComment} // Functie doorgeven
-          formatTimestamp={formatTimestamp} // Functie doorgeven
-          changelogItems={changelogItems} // Changelog doorgeven
+          addComment={addComment}
+          formatTimestamp={formatTimestamp}
+          // --- NIEUW: Geef changelog data door ---
+          changelogItems={changelogItems}
+          changelogLoading={changelogLoading}
+          changelogError={changelogError}
       />
 
       <main className="bg-gray-900 text-white min-h-screen">
