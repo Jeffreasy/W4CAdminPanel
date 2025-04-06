@@ -200,7 +200,7 @@ export default function LoginPage() {
         </div>
         
         <div className="text-center mt-6 text-gray-500 text-sm">
-          <Link href="/" className="hover:text-white transition-colors">
+          <Link href="https://www.whiskyforcharity.com/" className="hover:text-white transition-colors">
             Return to Website
           </Link>
           <p className="mt-2">Whisky For Charity Admin Portal</p>

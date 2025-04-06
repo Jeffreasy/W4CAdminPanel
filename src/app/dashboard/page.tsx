@@ -13,6 +13,11 @@ import Image from 'next/image'
 import { nl } from 'date-fns/locale'
 import { createClient } from '@supabase/supabase-js'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import {
+  ChartBarIcon,
+  ArrowLeftOnRectangleIcon,
+  ArrowTopRightOnSquareIcon
+} from '@heroicons/react/24/outline'
 
 interface Order {
   id: string
@@ -167,21 +172,37 @@ export default function DashboardPage() {
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 sm:p-6">
           <div className="px-6 py-4">
-            <h1 className="text-2xl font-semibold text-white mb-1">Welcome back</h1>
-            <p className="text-gray-400">{user.email}</p>
+            <h1 className="text-xl sm:text-2xl font-semibold text-white mb-1">
+              Welcome back, {user?.email?.split('@')[0] ?? 'Admin'}!
+            </h1>
+            <p className="text-sm text-gray-500">{user?.email ?? 'Not logged in'}</p>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 px-6 pb-4 sm:px-0 sm:pb-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 px-6 pb-4 sm:px-0 sm:pb-0">
             <button
               onClick={() => router.push('/dashboard/analytics')}
-              className="btn-primary px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
+              className="btn-primary px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
             >
-              Analytics
+              <ChartBarIcon className="h-4 w-4" />
+              <span>Analytics</span>
             </button>
+            <a
+              href="https://www.whiskyforcharity.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+            >
+              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              <span>Go to Website</span>
+            </a>
             <button
               onClick={() => signOut()}
-              className="btn-danger px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
+              className="btn-danger px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
             >
-              Sign Out
+              <ArrowLeftOnRectangleIcon className="h-4 w-4" />
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
