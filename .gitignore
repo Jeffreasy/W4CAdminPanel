@@ -1,7 +1,66 @@
-node_modules
-.next
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Optional: Add other common Next.js/Node ignores
-#.env*.local
-#.env
-#*.log
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js build output
+/.next/
+/out/
+
+# Production
+/build
+
+# Nuxt.js build output
+/.nuxt/
+/dist/
+
+# Remix build output
+/build/
+/public/build/
+
+# Docusaurus build output
+/.docusaurus/
+
+# Gatsby build output
+/.cache/
+/public
+
+# Miscellaneous
+.DS_Store
+*.pem
+
+# Nodejs logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+logs
+*.log.*
+
+# Optional: lock files
+# package-lock.json
+# yarn.lock
+
+# Optional: typescript cache files
+# *.tsbuildinfo

@@ -5,9 +5,10 @@ import { Dialog, Menu, Transition } from '@headlessui/react'
 import {
   Bars3Icon,
   HomeIcon,
-  UsersIcon,
   FolderIcon,
-  CurrencyDollarIcon,
+  ChartBarIcon,
+  DocumentTextIcon,
+  ShoppingCartIcon,
 } from '@heroicons/react/24/outline'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
@@ -15,10 +16,11 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Users', href: '/dashboard/users', icon: UsersIcon },
-  { name: 'Projects', href: '/dashboard/projects', icon: FolderIcon },
-  { name: 'Donations', href: '/dashboard/donations', icon: CurrencyDollarIcon },
+  { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
+  { name: 'Content', href: '/dashboard/content', icon: DocumentTextIcon },
+  { name: 'Orders', href: '/dashboard/orders', icon: ShoppingCartIcon },
+  { name: 'Products', href: '/dashboard/products', icon: FolderIcon },
+  { name: 'Analytics', href: '/dashboard/analytics', icon: HomeIcon },
 ]
 
 function classNames(...classes: string[]) {

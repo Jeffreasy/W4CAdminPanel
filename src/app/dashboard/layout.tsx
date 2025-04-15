@@ -56,11 +56,11 @@ const navItems = [
     path: '/dashboard/analytics', 
     icon: <ChartBarIcon className="h-5 w-5" />
   },
-  { 
-    name: 'Looker Studio', 
-    path: '/dashboard/looker-studio', 
-    icon: <DocumentChartBarIcon className="h-5 w-5" />
-  },
+  // { 
+  //   name: 'Looker Studio', 
+  //   path: '/dashboard/looker-studio', 
+  //   icon: <DocumentChartBarIcon className="h-5 w-5" />
+  // },
 ]
 
 export default function DashboardLayout({

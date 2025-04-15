@@ -1,361 +1,456 @@
 'use client'
 
-import React, { useEffect, useState, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { format } from 'date-fns';
-import { nl } from 'date-fns/locale';
-import { barChartSetting, pieChartSetting, lineChartSetting } from '../../../components/ChartsSettings';
-import CustomMetrics from '../../../components/dashboard/CustomMetrics';
-import SelectDateRange from '../../../components/dashboard/SelectDateRange';
-import { Doughnut, Pie, Bar, Line } from 'react-chartjs-2';
-import { Chart, registerables } from 'chart.js';
-import { useRouter } from 'next/navigation';
-import LoadingSpinner from '../../../components/ui/LoadingSpinner';
-import ErrorMessage from '../../../components/ui/ErrorMessage';
-import { animate } from '../../../utils/animations';
+import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '../../../contexts/AuthContext' // Adjusted path
+import { format } from 'date-fns'
+import { useDataFetching } from '../../../hooks/useDataFetching' // Adjusted path
+import LoadingSpinner from '../../../components/ui/LoadingSpinner' // Adjusted path
+import ErrorMessage from '../../../components/ui/ErrorMessage' // Adjusted path
+import { dashboardAnimations } from '../../../utils/animations' // Adjusted path
+import Link from 'next/link'
+import { nl } from 'date-fns/locale'
+import { createClient } from '@supabase/supabase-js'
+import {
+  ChartBarIcon, // Keep ChartBarIcon for potential use
+  ArrowLeftOnRectangleIcon, // Needed for Sign Out
+  ArrowTopRightOnSquareIcon, // Needed for Go to Website
+  // Removed icons specific to stats if not directly used, add back if needed
+} from '@heroicons/react/24/outline'
 
-Chart.register(...registerables);
+// Interfaces from original dashboard page
+interface Order {
+  id: string
+  order_number: string
+  customer_first_name: string
+  customer_last_name: string
+  customer_email: string
+  total_amount: number
+  status: string
+  created_at: string
+}
 
-// Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  stock: number
+  is_active: boolean | string
+  image: string // Keep image, might be useful for product list
+  created_at: string
+}
 
-export default function Analytics() {
-  // References for animations
-  const pageRef = useRef<HTMLDivElement>(null);
-  const chartsRef = useRef<HTMLDivElement>(null);
-  const metricsRef = useRef<HTMLDivElement>(null);
+// Supabase client (can likely be removed if useDataFetching handles it)
+// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+// const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  const router = useRouter();
-  const [orderData, setOrderData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
-    start: new Date(new Date().setDate(new Date().getDate() - 30)),
-    end: new Date(),
-  });
+// Renamed function
+export default function AnalyticsPage() {
+  const { user, isLoading, signOut } = useAuth()
+  const router = useRouter()
+  
+  // Refs for animations (kept)
+  const statsRef = useRef<HTMLDivElement>(null)
+  const welcomeRef = useRef<HTMLDivElement>(null)
+  const ordersTableRef = useRef<HTMLDivElement>(null)
+  const productsTableRef = useRef<HTMLDivElement>(null)
 
-  // State for analytics data
-  const [analyticsData, setAnalyticsData] = useState({
-    totalOrders: 0,
-    totalRevenue: 0,
-    averageOrderValue: 0,
-    ordersByStatus: {} as Record<string, number>,
-    ordersByDate: {} as Record<string, number>,
-    ordersByProduct: {} as Record<string, number>,
-    revenueByProduct: {} as Record<string, number>,
-  });
-
-  // Function to fetch orders data from Supabase
-  async function fetchOrders() {
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Get the date range in ISO format
-      const startDate = dateRange.start.toISOString();
-      const endDate = dateRange.end.toISOString();
-
-      // Fetch orders from Supabase within the date range
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (
-            *,
-            product: products (*)
-          )
-        `)
-        .gte('created_at', startDate)
-        .lte('created_at', endDate);
-
-      if (error) {
-        console.error('Error fetching orders:', error);
-        setError('Failed to fetch orders. Please try again later.');
-        return;
-      }
-
-      if (data) {
-        setOrderData(data);
-        processAnalyticsData(data);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setError('An unexpected error occurred. Please try again later.');
-    } finally {
-      setLoading(false);
+  // Helper function for active products (kept)
+  const isProductActive = (product: Product): boolean => {
+    if (typeof product.is_active === 'boolean') {
+      return product.is_active;
     }
-  }
-
-  // Process the data for analytics
-  function processAnalyticsData(orders: any[]) {
-    // Initialize analytics counters
-    let totalOrders = orders.length;
-    let totalRevenue = 0;
-    let ordersByStatus: Record<string, number> = {};
-    let ordersByDate: Record<string, number> = {};
-    let ordersByProduct: Record<string, number> = {};
-    let revenueByProduct: Record<string, number> = {};
-
-    // Process each order
-    orders.forEach((order) => {
-      // Count by status
-      const status = order.status || 'unknown';
-      ordersByStatus[status] = (ordersByStatus[status] || 0) + 1;
-
-      // Count by date (group by day)
-      const date = format(new Date(order.created_at), 'yyyy-MM-dd');
-      ordersByDate[date] = (ordersByDate[date] || 0) + 1;
-
-      // Process order items
-      let orderTotal = 0;
-      order.order_items?.forEach((item: any) => {
-        // Skip if product information is not available
-        if (!item.product) return;
-
-        const productName = item.product.name || 'Unknown Product';
-        const quantity = item.quantity || 0;
-        const price = item.price || 0;
-        const itemTotal = quantity * price;
-        
-        // Sum for this product
-        ordersByProduct[productName] = (ordersByProduct[productName] || 0) + quantity;
-        revenueByProduct[productName] = (revenueByProduct[productName] || 0) + itemTotal;
-        
-        // Add to order total
-        orderTotal += itemTotal;
-      });
-
-      // Add to total revenue
-      totalRevenue += orderTotal;
-    });
-
-    // Calculate average order value
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-    // Update state with processed data
-    setAnalyticsData({
-      totalOrders,
-      totalRevenue,
-      averageOrderValue,
-      ordersByStatus,
-      ordersByDate,
-      ordersByProduct,
-      revenueByProduct,
-    });
-  }
-
-  useEffect(() => {
-    fetchOrders();
-  }, [dateRange]);
-
-  useEffect(() => {
-    // Animate component entrance when loaded
-    if (!loading && pageRef.current) {
-      animate(pageRef.current, 'fadeInUp', {
-        duration: 0.5,
-        delay: 0.1
-      });
-      
-      // Animate charts
-      if (chartsRef.current) {
-        animate(chartsRef.current, 'fadeIn', {
-          duration: 0.8,
-          delay: 0.3
-        });
-      }
-      
-      // Animate metrics
-      if (metricsRef.current) {
-        animate(metricsRef.current, 'fadeInUp', {
-          duration: 0.7,
-          delay: 0.2
-        });
-      }
+    if (typeof product.is_active === 'string') {
+      const value = product.is_active.toLowerCase();
+      return value === 'true' || value === '1' || value === 'yes';
     }
-  }, [loading]);
-
-  // Prepare chart data
-  const orderStatusData = {
-    labels: Object.keys(analyticsData.ordersByStatus),
-    datasets: [
-      {
-        data: Object.values(analyticsData.ordersByStatus),
-        backgroundColor: [
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(153, 102, 255, 0.7)',
-          'rgba(255, 159, 64, 0.7)',
-          'rgba(255, 99, 132, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-        ],
-        borderWidth: 1,
-      },
-    ],
+    if (product.is_active === null || product.is_active === undefined) {
+      console.warn('Null/undefined is_active value:', product.id, product.name); // Changed to warn
+      return false;
+    }
+    console.warn('Unknown is_active type:', product.id, product.name, product.is_active, typeof product.is_active); // Changed to warn
+    return false;
   };
 
-  // Sort dates and prepare order trend data
-  const sortedDates = Object.keys(analyticsData.ordersByDate).sort();
-  const orderTrendData = {
-    labels: sortedDates.map(date => 
-      format(new Date(date), 'd MMM', { locale: nl })
-    ),
-    datasets: [
-      {
-        label: 'Orders',
-        data: sortedDates.map(date => analyticsData.ordersByDate[date]),
-        borderColor: 'rgba(75, 192, 192, 1)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        tension: 0.3,
-        fill: true,
-      },
-    ],
-  };
+  // Data fetching for orders (kept)
+  const { 
+    data: orders, 
+    isLoading: ordersLoading, 
+    error: ordersError,
+    refetch: refetchOrders
+  } = useDataFetching<Order>('orders', {
+    fetchOnMount: !!user,
+    dependencies: [user],
+    transform: (data) => {
+      return data
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 5);
+    }
+  });
+  
+  // Data fetching for products (kept)
+  const { 
+    data: products, 
+    isLoading: productsLoading, 
+    error: productsError,
+    refetch: refetchProducts
+  } = useDataFetching<Product>('products', {
+    fetchOnMount: !!user,
+    dependencies: [user]
+    // No transform needed here, fetch all products for stats
+  });
+  
+  // Combined loading state (kept)
+  const dataLoading = ordersLoading || productsLoading;
+  
+  // Combined error state (kept)
+  const combinedError = ordersError || productsError; // Renamed to avoid conflict
 
-  // Get top 5 products by revenue
-  const topProductsByRevenue = Object.entries(analyticsData.revenueByProduct)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  // Animations useEffect (kept, might need adjustments based on final structure)
+  useEffect(() => {
+    // Check if data is loaded AND refs are available
+    if (!dataLoading && statsRef.current && welcomeRef.current && ordersTableRef.current && productsTableRef.current) {
+      // Welcome banner animation
+      dashboardAnimations.welcomeBanner(welcomeRef.current);
+      
+      // Statistics animation
+      dashboardAnimations.statsCards('.stat-card');
+      
+      // Tables animation
+      dashboardAnimations.table(ordersTableRef.current, 0.4);
+      dashboardAnimations.table(productsTableRef.current, 0.6);
+      
+      // Stat value counting animation
+      const statValueElements = document.querySelectorAll('.stat-value');
+      statValueElements.forEach(element => {
+        const dataValue = element.getAttribute('data-value');
+        if (!dataValue) return;
 
-  const topProductsData = {
-    labels: topProductsByRevenue.map(([product]) => product),
-    datasets: [
-      {
-        label: 'Revenue (€)',
-        data: topProductsByRevenue.map(([, revenue]) => revenue),
-        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+        let valueToAnimate: number;
+        let totalValue: number | undefined;
+        
+        // Check if it's a ratio like "active/total"
+        if (dataValue.includes('/')) {
+          const parts = dataValue.split('/');
+          valueToAnimate = Number(parts[0]);
+          totalValue = Number(parts[1]);
+        } else {
+          valueToAnimate = Number(dataValue);
+        }
 
-  // Handle date range change
-  const handleDateRangeChange = (startDate: Date, endDate: Date, label: string) => {
-    setDateRange({
-      start: startDate,
-      end: endDate
-    });
-  };
+        // Check if parsing was successful
+        if (isNaN(valueToAnimate)) return; 
 
-  if (loading) {
-    return <LoadingSpinner message="Analytics data laden..." size="large" centered />;
+        const prefix = element.textContent?.includes('€') ? '€' : '';
+        const suffix = totalValue !== undefined ? `/${totalValue}` : '';
+        
+        // Use the animateCountUp function from utility
+        dashboardAnimations.statValue(element as HTMLElement, valueToAnimate, {
+          prefix,
+          suffix,
+          isCurrency: prefix === '€'
+        });
+      });
+    } 
+    // Add refs to dependency array to ensure animation runs when they are ready
+  }, [dataLoading, statsRef, welcomeRef, ordersTableRef, productsTableRef]);
+
+  // Loading state for auth or data (kept)
+  if (isLoading || dataLoading) {
+    return <LoadingSpinner size="large" message="Loading Overview..." centered />
   }
 
-  if (error) {
-    return <ErrorMessage message={error} variant="error" />;
+  // Redirect if not logged in (kept)
+  if (!user) {
+    router.push('/login')
+    return null
   }
+  
+  // Handle error retry (kept)
+  const handleRetry = () => {
+    if (ordersError) refetchOrders();
+    if (productsError) refetchProducts();
+  };
+  
+  // Calculate dashboard stats (kept)
+  // Ensure data is available before calculating
+  const safeOrders = orders || [];
+  const safeProducts = products || [];
+  
+  const totalOrdersCount = safeOrders.length // This is only the top 5, consider fetching all for accurate count or renaming
+  const totalProductsCount = safeProducts.length
+  const activeProductsCount = safeProducts.filter(isProductActive).length;
+  const totalRevenueAmount = safeOrders.reduce((sum, order) => sum + Number(order.total_amount || 0), 0) // Use safeOrders and default to 0
 
   return (
-    <div ref={pageRef} className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold">Analytics Dashboard</h1>
-        <SelectDateRange 
-          onRangeChange={handleDateRangeChange} 
-          initialRange="30days"
-        />
+    <div className="section-spacing"> {/* Kept original spacing */}
+      {/* Welcome Banner (kept) */}
+      <div 
+        ref={welcomeRef} 
+        className="container-card p-0 mb-6" // Added margin bottom
+      >
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 sm:p-6">
+          <div className="px-6 py-4">
+            <h1 className="text-xl sm:text-2xl font-semibold text-white mb-1">
+              Welcome back, {user?.email?.split('@')[0] ?? 'Admin'}!
+            </h1>
+            <p className="text-sm text-gray-500">{user?.email ?? 'Not logged in'}</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 px-6 pb-4 sm:px-0 sm:pb-0">
+            {/* Removed Analytics button as we are on Analytics page */}
+            <a
+              href="https://www.whiskyforcharity.com" // Kept original link
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+            >
+              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+              <span>Go to Website</span>
+            </a>
+            <button
+              onClick={() => signOut()} // Kept sign out
+              className="btn-danger px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+            >
+              <ArrowLeftOnRectangleIcon className="h-4 w-4" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </div>
       </div>
-
-      {/* Key metrics */}
-      <div ref={metricsRef} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <CustomMetrics 
-          title="Totaal Bestellingen" 
-          value={analyticsData.totalOrders} 
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-          }
-          iconBgClass="bg-blue-500/10"
-          previousValue={analyticsData.totalOrders - 5}
-          increase={true}
+      
+      {/* Error Message Display (kept) */}
+      {combinedError && (
+        <ErrorMessage 
+          message={combinedError.message} 
+          variant="error"
+          action={{
+            label: "Retry Fetching",
+            onClick: handleRetry
+          }}
         />
-        <CustomMetrics 
-          title="Totale Omzet" 
-          value={analyticsData.totalRevenue} 
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
-          iconBgClass="bg-green-500/10"
-          previousValue={analyticsData.totalRevenue - 150}
-          increase={true}
-          valuePrefix="€"
-        />
-        <CustomMetrics 
-          title="Gem. Bestelwaarde" 
-          value={analyticsData.averageOrderValue} 
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-          }
-          iconBgClass="bg-amber-500/10"
-          previousValue={analyticsData.averageOrderValue + 5}
-          increase={false}
-          valuePrefix="€"
-        />
-      </div>
-
-      {/* Charts */}
-      <div ref={chartsRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card-standard p-4">
-          <h2 className="text-xl font-semibold mb-4">Bestellingen per Dag</h2>
-          <div className="h-64 md:h-72">
-            <Line data={orderTrendData} options={lineChartSetting} />
+      )}
+      
+      {/* Statistics Section (kept) */}
+      <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Total Orders Card */}
+        <div className="stat-card container-card hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Recent Orders</h2>
+                {/* Display the count of fetched recent orders */} 
+                <p className="stat-value text-2xl sm:text-3xl font-bold text-white" data-value={totalOrdersCount}>{totalOrdersCount}</p>
+                <p className="text-info mt-2">last 5 orders shown</p>
+              </div>
+              <div className="p-3 bg-blue-500/10 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="card-standard p-4">
-          <h2 className="text-xl font-semibold mb-4">Status Bestellingen</h2>
-          <div className="h-64 md:h-72 flex items-center justify-center">
-            <Doughnut 
-              data={orderStatusData} 
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: {
-                    position: 'right',
-                    labels: {
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      font: {
-                        family: 'Inter',
-                      },
-                      padding: 15
-                    }
-                  },
-                  tooltip: {
-                    backgroundColor: 'rgba(53, 71, 125, 0.8)',
-                    padding: 12,
-                    titleColor: 'rgba(255, 255, 255, 0.95)',
-                    bodyColor: 'rgba(255, 255, 255, 0.8)',
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
-                    borderWidth: 1,
-                    displayColors: true,
-                    boxPadding: 4,
-                    bodyFont: {
-                      family: 'Inter',
-                    },
-                    titleFont: {
-                      family: 'Inter',
-                      weight: 'bold'
-                    }
-                  }
-                }
-              }} 
-            />
+        {/* Total Revenue Card */}
+        <div className="stat-card container-card hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Recent Revenue</h2>
+                <p className="stat-value text-2xl sm:text-3xl font-bold text-amber-500" data-value={totalRevenueAmount}>€{totalRevenueAmount.toFixed(2)}</p>
+                <p className="text-info mt-2">from last 5 orders</p>
+              </div>
+               <div className="p-3 bg-amber-500/10 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
         
-        <div className="card-standard p-4 md:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Top 5 Producten (Omzet)</h2>
-          <div className="h-64 md:h-96">
-            <Bar data={topProductsData} options={barChartSetting} />
+        {/* Active Products Card */}
+        <div className="stat-card container-card hover:border-green-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Products</h2>
+                {/* Display active/total products */}
+                <p className="stat-value text-2xl sm:text-3xl font-bold text-white" data-value={`${activeProductsCount}/${totalProductsCount}`}>
+                  {activeProductsCount}/{totalProductsCount}
+                </p>
+                <p className="text-info mt-2">active / total</p>
+              </div>
+              <div className="p-3 bg-green-500/10 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
+        
+        {/* Status Card (kept as is) */}
+        <div className="stat-card container-card hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <div className="p-6">
+            <div className="flex justify-between items-start space-x-4">
+              <div>
+                <h2 className="text-subtitle mb-2">Status</h2>
+                <div className="flex gap-2 items-center mb-1 sm:mb-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></div>
+                  <p className="text-lg sm:text-xl font-bold">Online</p>
+                </div>
+                <div className="flex items-center text-muted text-xs sm:text-sm">
+                  <span className="inline-block w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                  <span>All systems operational</span>
+                </div>
+              </div>
+               <div className="p-3 bg-purple-500/10 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Orders Table Section (kept) */}
+      <div ref={ordersTableRef} className="container-card">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <h2 className="text-lg font-medium text-white">Recent Orders</h2>
+          <button 
+            onClick={() => router.push('/dashboard/orders')} // Link to full orders page
+            className="btn-secondary px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm self-start sm:self-center"
+          >
+            View All Orders
+          </button>
+        </div>
+        
+        {safeOrders.length === 0 && !ordersLoading ? (
+          <div className="text-center py-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <p className="text-gray-300 text-lg mb-1">No recent orders</p>
+            <p className="text-info">Recent orders will appear here.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="min-w-[640px] px-4 sm:px-0">
+              <table className="w-full border-separate border-spacing-0">
+                <thead>
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400 border-b border-gray-700">Order Number</th>
+                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-400 border-b border-gray-700">Amount</th>
+                     <th className="px-6 py-4 text-left text-sm font-medium text-gray-400 border-b border-gray-700 hidden md:table-cell">Customer</th>
+                     <th className="px-6 py-4 text-center text-sm font-medium text-gray-400 border-b border-gray-700 hidden lg:table-cell">Date</th>
+                     <th className="px-6 py-4 text-center text-sm font-medium text-gray-400 border-b border-gray-700">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {safeOrders.map((order) => (
+                    <tr 
+                      key={order.id} 
+                      onClick={() => router.push(`/dashboard/orders/${order.id}`)} // Link to order detail
+                      className="h-16 hover:bg-gray-800/50 cursor-pointer transition-colors"
+                    >
+                      <td className="px-6 whitespace-nowrap text-sm font-medium text-white">#{order.order_number}</td>
+                      <td className="px-6 text-right text-amber-500 font-medium text-sm">€{Number(order.total_amount).toFixed(2)}</td>
+                      <td className="px-6 whitespace-nowrap text-sm text-gray-300 hidden md:table-cell">{order.customer_first_name} {order.customer_last_name}</td>
+                      <td className="px-6 text-center whitespace-nowrap text-xs text-gray-400 hidden lg:table-cell">{format(new Date(order.created_at), 'PP', { locale: nl })}</td>
+                      <td className="px-6 text-center whitespace-nowrap">
+                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${ 
+                            order.status === 'paid' ? 'bg-green-500/20 text-green-400' : 
+                            order.status === 'shipped' ? 'bg-blue-500/20 text-blue-400' : 
+                            order.status === 'completed' ? 'bg-purple-500/20 text-purple-400' : 
+                            order.status === 'cancelled' ? 'bg-red-500/20 text-red-400' : 
+                            'bg-yellow-500/20 text-yellow-400' 
+                         }`}> 
+                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                         </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Products Table Section (kept) */}
+      <div ref={productsTableRef} className="container-card">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-lg font-medium text-white">Recent Products</h2>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 self-start sm:self-auto">
+            <button 
+              onClick={() => router.push('/dashboard/products/new')} // Link to add product
+              className="btn-primary px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
+            >
+              Add Product
+            </button>
+            <button 
+              onClick={() => router.push('/dashboard/products')} // Link to manage products
+              className="btn-secondary px-3 py-1.5 sm:px-4 sm:py-2 text-sm"
+            >
+              Manage Products
+            </button>
+          </div>
+        </div>
+        
+        {safeProducts.length === 0 && !productsLoading ? (
+          <div className="text-center py-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            <p className="text-gray-300 text-lg mb-1">No products yet</p>
+            <p className="text-info">Add products to start selling.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <div className="min-w-[640px] px-4 sm:px-0">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left bg-gray-700/40">
+                    <th className="px-6 py-4 text-left font-semibold text-gray-300">Name</th>
+                    <th className="px-6 py-4 text-right text-gray-300 hidden sm:table-cell">Price</th>
+                    <th className="px-6 py-4 text-center text-gray-300 hidden md:table-cell">Stock</th>
+                    <th className="px-6 py-4 text-center text-gray-300">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* Show maybe top 5 most recently added products? */} 
+                  {safeProducts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 5).map((product) => (
+                    <tr 
+                      key={product.id} 
+                      onClick={() => router.push(`/dashboard/products/${product.id}`)} // Link to product detail
+                      className="border-t border-gray-700/30 hover:bg-gray-700/20 transition-colors cursor-pointer h-16"
+                    >
+                      <td className="px-6 py-4 text-xs sm:text-sm font-medium text-white">{product.name}</td>
+                      <td className="px-6 py-4 text-xs sm:text-sm font-medium text-amber-500 text-right hidden sm:table-cell">€{Number(product.price).toFixed(2)}</td>
+                      <td className="px-6 py-4 text-xs sm:text-sm font-medium text-center hidden md:table-cell">{product.stock}</td>
+                      <td className="px-6 py-4 text-center">
+                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${ 
+                            isProductActive(product) ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                         }`}> 
+                           {isProductActive(product) ? 'Active' : 'Inactive'}
+                         </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        
+        {/* Removed mobile scroll indicator as tables are more detailed now */}
       </div>
     </div>
-  );
+  )
 } 

@@ -1,8 +1,5 @@
 {
   "/not-found": "app/not-found.js",
-  "/dashboard/content/homepage": "app/dashboard/content/homepage.js",
-  "/dashboard/content/homepage/page": "app/dashboard/content/homepage/page.js",
-  "/dashboard/content/page": "app/dashboard/content/page.js",
-  "/dashboard/content/aboutpage/page": "app/dashboard/content/aboutpage/page.js",
-  "/dashboard/content/charitypage/page": "app/dashboard/content/charitypage/page.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/login/page": "app/login/page.js"
 }
