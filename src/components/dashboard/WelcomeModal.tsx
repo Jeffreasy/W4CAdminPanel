@@ -108,10 +108,16 @@ export default function WelcomeModal({
                     <p className="italic text-gray-500">No recent updates found.</p>
                  )}
                  {!changelogLoading && !changelogError && changelogItems.length > 0 && (
-                    <ul className="list-disc list-inside space-y-1">
-                       {/* Render item.content */} 
-                      {changelogItems.map((item) => (<li key={item.id}>{item.content}</li>))}
-                    </ul>
+                    <div className="space-y-2">
+                      {changelogItems.map((item) => (
+                         <div key={item.id} className="pb-2 border-b border-gray-700/50 last:border-b-0">
+                           <p className="text-gray-300">{item.content}</p> 
+                           <p className="text-xs text-gray-500 mt-1 text-right">
+                             {formatTimestamp(item.created_at)}
+                           </p>
+                         </div>
+                      ))}
+                    </div>
                  )}
                </div>
              </div>

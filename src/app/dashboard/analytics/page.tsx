@@ -51,9 +51,8 @@ export default function AnalyticsPage() {
   const { user, isLoading, signOut } = useAuth()
   const router = useRouter()
   
-  // Refs for animations (kept)
+  // Refs for animations (kept for stats and tables)
   const statsRef = useRef<HTMLDivElement>(null)
-  const welcomeRef = useRef<HTMLDivElement>(null)
   const ordersTableRef = useRef<HTMLDivElement>(null)
   const productsTableRef = useRef<HTMLDivElement>(null)
 
@@ -67,10 +66,10 @@ export default function AnalyticsPage() {
       return value === 'true' || value === '1' || value === 'yes';
     }
     if (product.is_active === null || product.is_active === undefined) {
-      console.warn('Null/undefined is_active value:', product.id, product.name); // Changed to warn
+      console.warn('Null/undefined is_active value:', product.id, product.name);
       return false;
     }
-    console.warn('Unknown is_active type:', product.id, product.name, product.is_active, typeof product.is_active); // Changed to warn
+    console.warn('Unknown is_active type:', product.id, product.name, product.is_active, typeof product.is_active);
     return false;
   };
 
@@ -108,12 +107,12 @@ export default function AnalyticsPage() {
   // Combined error state (kept)
   const combinedError = ordersError || productsError; // Renamed to avoid conflict
 
-  // Animations useEffect (kept, might need adjustments based on final structure)
+  // Animations useEffect (updated)
   useEffect(() => {
     // Check if data is loaded AND refs are available
-    if (!dataLoading && statsRef.current && welcomeRef.current && ordersTableRef.current && productsTableRef.current) {
-      // Welcome banner animation
-      dashboardAnimations.welcomeBanner(welcomeRef.current);
+    if (!dataLoading && statsRef.current && ordersTableRef.current && productsTableRef.current) {
+      // Removed Welcome banner animation call
+      // dashboardAnimations.welcomeBanner(welcomeRef.current);
       
       // Statistics animation
       dashboardAnimations.statsCards('.stat-card');
@@ -127,11 +126,8 @@ export default function AnalyticsPage() {
       statValueElements.forEach(element => {
         const dataValue = element.getAttribute('data-value');
         if (!dataValue) return;
-
         let valueToAnimate: number;
         let totalValue: number | undefined;
-        
-        // Check if it's a ratio like "active/total"
         if (dataValue.includes('/')) {
           const parts = dataValue.split('/');
           valueToAnimate = Number(parts[0]);
@@ -139,14 +135,9 @@ export default function AnalyticsPage() {
         } else {
           valueToAnimate = Number(dataValue);
         }
-
-        // Check if parsing was successful
         if (isNaN(valueToAnimate)) return; 
-
         const prefix = element.textContent?.includes('€') ? '€' : '';
         const suffix = totalValue !== undefined ? `/${totalValue}` : '';
-        
-        // Use the animateCountUp function from utility
         dashboardAnimations.statValue(element as HTMLElement, valueToAnimate, {
           prefix,
           suffix,
@@ -154,8 +145,8 @@ export default function AnalyticsPage() {
         });
       });
     } 
-    // Add refs to dependency array to ensure animation runs when they are ready
-  }, [dataLoading, statsRef, welcomeRef, ordersTableRef, productsTableRef]);
+    // Removed welcomeRef from dependency array
+  }, [dataLoading, statsRef, ordersTableRef, productsTableRef]);
 
   // Loading state for auth or data (kept)
   if (isLoading || dataLoading) {
@@ -186,42 +177,6 @@ export default function AnalyticsPage() {
 
   return (
     <div className="section-spacing"> {/* Kept original spacing */}
-      {/* Welcome Banner (kept) */}
-      <div 
-        ref={welcomeRef} 
-        className="container-card p-0 mb-6" // Added margin bottom
-      >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 sm:p-6">
-          <div className="px-6 py-4">
-            <h1 className="text-xl sm:text-2xl font-semibold text-white mb-1">
-              Welcome back, {user?.email?.split('@')[0] ?? 'Admin'}!
-            </h1>
-            <p className="text-sm text-gray-500">{user?.email ?? 'Not logged in'}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 px-6 pb-4 sm:px-0 sm:pb-0">
-            {/* Removed Analytics button as we are on Analytics page */}
-            <a
-              href="https://www.whiskyforcharity.com" // Kept original link
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
-                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
-            >
-              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-              <span>Go to Website</span>
-            </a>
-            <button
-              onClick={() => signOut()} // Kept sign out
-              className="btn-danger px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
-                         transition-all duration-300 transform hover:scale-105 hover:shadow-md"
-            >
-              <ArrowLeftOnRectangleIcon className="h-4 w-4" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      
       {/* Error Message Display (kept) */}
       {combinedError && (
         <ErrorMessage 

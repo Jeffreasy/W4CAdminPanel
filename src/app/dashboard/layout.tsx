@@ -6,8 +6,10 @@ import { AuthProvider, useAuth } from '../../contexts/AuthContext'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Toaster, toast } from 'react-hot-toast'
-import { animate, animateStaggered } from '../../utils/animations'
-import { HomeIcon, FolderIcon, CurrencyDollarIcon, ChartBarIcon, DocumentChartBarIcon, XMarkIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline'
+import { format } from 'date-fns'
+import { nl } from 'date-fns/locale'
+import { animate, animateStaggered, dashboardAnimations } from '../../utils/animations'
+import { HomeIcon, FolderIcon, CurrencyDollarIcon, ChartBarIcon, DocumentChartBarIcon, XMarkIcon, PaperAirplaneIcon, ShieldCheckIcon, ArrowLeftOnRectangleIcon, ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline'
 import DashboardChat, { DashboardChatHandle } from '../../components/dashboard/DashboardChat'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import LoadingSpinner from '../../components/ui/LoadingSpinner'
@@ -56,11 +58,11 @@ const navItems = [
     path: '/dashboard/analytics', 
     icon: <ChartBarIcon className="h-5 w-5" />
   },
-  // { 
-  //   name: 'Looker Studio', 
-  //   path: '/dashboard/looker-studio', 
-  //   icon: <DocumentChartBarIcon className="h-5 w-5" />
-  // },
+  { 
+    name: 'Security Logs',
+    path: '/dashboard/security', 
+    icon: <ShieldCheckIcon className="h-5 w-5" />
+  },
 ]
 
 export default function DashboardLayout({
@@ -70,10 +72,11 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname()
   const [isMounted, setIsMounted] = useState(false)
-  const { user, isLoading: isAuthLoading } = useAuth()
+  const { user, isLoading: isAuthLoading, signOut } = useAuth()
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   const supabase = createClientComponentClient();
   const chatRef = useRef<DashboardChatHandle>(null);
+  const welcomeRef = useRef<HTMLDivElement>(null);
 
   // --- NEW: State and Logic for Comments ---
   const [comments, setComments] = useState<Comment[]>([]);
@@ -247,6 +250,14 @@ export default function DashboardLayout({
     }
   }, [user, isAuthLoading]);
   
+  // --- Add useEffect for Welcome Banner Animation --- 
+  useEffect(() => {
+    if (!isAuthLoading && welcomeRef.current) {
+      dashboardAnimations.welcomeBanner(welcomeRef.current);
+    }
+  }, [isAuthLoading, welcomeRef]);
+  // -------------------------------------------------
+  
   const isActive = (path: string) => {
     return pathname === path || 
            (path !== '/dashboard' && pathname?.startsWith(path))
@@ -255,12 +266,18 @@ export default function DashboardLayout({
   // Format timestamp function (moved here or keep in chat component and pass down? Moved here for now)
   const formatTimestamp = (timestamp: string) => {
     try {
-      return new Date(timestamp).toLocaleString('nl-NL', { 
-          dateStyle: 'short', 
-          timeStyle: 'short' 
-      });
+      const date = new Date(timestamp)
+      const now = new Date()
+      const diffInSeconds = (now.getTime() - date.getTime()) / 1000
+
+      if (diffInSeconds < 60) return 'just now'
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+      if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+
+      return format(date, 'd MMM', { locale: nl })
     } catch (e) {
-        return "Invalid date";
+      return 'Invalid Date'
     }
   };
 
@@ -379,6 +396,42 @@ export default function DashboardLayout({
         
         {/* Main content with padding to account for top navbar */}
         <div className="admin-content pt-[70px] pb-24 md:pb-10 px-3 sm:px-4 md:px-6 max-w-7xl mx-auto">
+          {/* ------ WELCOME BANNER MOVED HERE ------ */}
+          <div 
+            ref={welcomeRef} 
+            className="container-card p-0 mx-4 md:mx-6 lg:mx-8 mt-6 mb-6" // Added standard margins/padding
+          >
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 sm:p-6">
+              <div className="px-6 py-4">
+                <h1 className="text-xl sm:text-2xl font-semibold text-white mb-1">
+                  Welcome back, {user?.email?.split('@')[0] ?? 'Admin'}!
+                </h1>
+                <p className="text-sm text-gray-500">{user?.email ?? 'Not logged in'}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 px-6 pb-4 sm:px-0 sm:pb-0">
+                <a
+                  href="https://www.whiskyforcharity.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                             transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+                >
+                  <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                  <span>Go to Website</span>
+                </a>
+                <button
+                  onClick={() => signOut()} 
+                  className="btn-danger px-3 py-1.5 sm:px-4 sm:py-2 text-sm flex items-center justify-center gap-1.5 
+                             transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+                >
+                  <ArrowLeftOnRectangleIcon className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          {/* ---------------------------------------- */}
+
           {children}
         </div>
       </main>
