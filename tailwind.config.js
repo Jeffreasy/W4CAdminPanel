@@ -23,10 +23,5 @@ module.exports = {
       },
     },
   },
-  plugins: [],
-  safelist: [
-    'container-card',
-    'btn-primary',
-    'btn-secondary'
-  ]
+  plugins: []
 } 

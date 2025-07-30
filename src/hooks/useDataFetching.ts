@@ -10,7 +10,7 @@ const CACHE_EXPIRY = 60000 // 1 minute in milliseconds
 /**
  * Filter opties voor Supabase queries
  */
-export interface FilterOption {
+interface FilterOption {
   column: string
   operator: 'eq' | 'neq' | 'gt' | 'lt' | 'gte' | 'lte' | 'like' | 'ilike' | 'is' | 'in'
   value: any
@@ -19,7 +19,7 @@ export interface FilterOption {
 /**
  * Order opties voor Supabase queries
  */
-export interface OrderOption {
+interface OrderOption {
   column: string
   ascending?: boolean
 }
@@ -27,7 +27,7 @@ export interface OrderOption {
 /**
  * Opties voor pagination
  */
-export interface PaginationOption {
+interface PaginationOption {
   page: number
   pageSize: number
 }
@@ -35,7 +35,7 @@ export interface PaginationOption {
 /**
  * Hook configuratie opties
  */
-export interface UseDataFetchingOptions<T> {
+interface UseDataFetchingOptions<T> {
   /** Select specifieke kolommen (default: '*') */
   select?: string
   
@@ -403,4 +403,4 @@ export function useDataFetching<T>(
   }
 }
 
-export default useDataFetching 
+// Remove default export to avoid duplicate exports 

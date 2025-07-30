@@ -3,7 +3,7 @@ import gsap from 'gsap'
 /**
  * Animatietype om te gebruiken voor verschillende elementen
  */
-export type AnimationType =
+type AnimationType =
   | 'fadeIn'
   | 'fadeInUp'
   | 'fadeInDown'
@@ -27,7 +27,7 @@ export type AnimationType =
 /**
  * Opties voor de duur, vertraging en ease
  */
-export interface AnimationOptions {
+interface AnimationOptions {
   /** De duur van de animatie (default: 0.5) */
   duration?: number
   /** Vertraging voor de animatie begint (default: 0) */
@@ -44,7 +44,7 @@ export interface AnimationOptions {
 /**
  * Opties specifiek voor staggered animaties
  */
-export interface StaggerOptions extends AnimationOptions {
+interface StaggerOptions extends AnimationOptions {
   /** Tijd tussen elk element (default: 0.1) */
   staggerAmount?: number
   /** Animatie-type voor de staggered elementen (default: 'fadeInUp') */
@@ -54,7 +54,7 @@ export interface StaggerOptions extends AnimationOptions {
 /**
  * Opties specifiek voor nummer animaties
  */
-export interface CountUpOptions extends AnimationOptions {
+interface CountUpOptions extends AnimationOptions {
   /** Prefix toegevoegd aan het getal (bijv. '€') */
   prefix?: string
   /** Suffix toegevoegd aan het getal (bijv. '%') */
@@ -66,14 +66,14 @@ export interface CountUpOptions extends AnimationOptions {
 /**
  * Basis animatie functie die gsap.fromTo gebruikt
  */
-export const animateElement = (
+const animateElement = (
   element: gsap.TweenTarget,
   fromVars: gsap.TweenVars,
   toVars: gsap.TweenVars,
   options: AnimationOptions = {}
 ): gsap.core.Tween => {
   const { duration = 0.5, delay = 0, ease = 'power2.out', ...restOptions } = options
-  
+
   return gsap.fromTo(
     element,
     fromVars,
@@ -104,7 +104,7 @@ export const animate = (
         { opacity: 1 },
         options
       )
-      
+
     case 'fadeInUp':
       return animateElement(
         element,
@@ -112,7 +112,7 @@ export const animate = (
         { opacity: 1, y: 0 },
         options
       )
-      
+
     case 'fadeInDown':
       return animateElement(
         element,
@@ -120,7 +120,7 @@ export const animate = (
         { opacity: 1, y: 0 },
         options
       )
-      
+
     case 'fadeInLeft':
       return animateElement(
         element,
@@ -128,7 +128,7 @@ export const animate = (
         { opacity: 1, x: 0 },
         options
       )
-      
+
     case 'fadeInRight':
       return animateElement(
         element,
@@ -136,7 +136,7 @@ export const animate = (
         { opacity: 1, x: 0 },
         options
       )
-      
+
     case 'scale':
       return animateElement(
         element,
@@ -144,7 +144,7 @@ export const animate = (
         { opacity: 1, scale: 1 },
         { ...options, ease: options.ease || 'back.out(1.5)' }
       )
-      
+
     case 'slideUp':
       return animateElement(
         element,
@@ -152,7 +152,7 @@ export const animate = (
         { y: 0 },
         options
       )
-      
+
     case 'slideDown':
       return animateElement(
         element,
@@ -160,7 +160,7 @@ export const animate = (
         { y: 0 },
         options
       )
-      
+
     case 'bounce':
       return animateElement(
         element,
@@ -168,7 +168,7 @@ export const animate = (
         { y: 0, opacity: 1 },
         { ...options, ease: options.ease || 'elastic.out(1, 0.5)' }
       )
-      
+
     case 'fadeOut':
       return animateElement(
         element,
@@ -176,7 +176,7 @@ export const animate = (
         { opacity: 0 },
         options
       )
-      
+
     case 'popIn':
       return animateElement(
         element,
@@ -184,7 +184,7 @@ export const animate = (
         { opacity: 1, scale: 1 },
         { ...options, ease: 'back.out(1.7)' }
       )
-      
+
     case 'slideInLeft':
       return animateElement(
         element,
@@ -192,7 +192,7 @@ export const animate = (
         { x: 0, opacity: 1 },
         options
       )
-      
+
     case 'slideInRight':
       return animateElement(
         element,
@@ -200,7 +200,7 @@ export const animate = (
         { x: 0, opacity: 1 },
         options
       )
-      
+
     case 'slideInUp':
       return animateElement(
         element,
@@ -208,7 +208,7 @@ export const animate = (
         { y: 0, opacity: 1 },
         options
       )
-      
+
     case 'slideInDown':
       return animateElement(
         element,
@@ -216,7 +216,7 @@ export const animate = (
         { y: 0, opacity: 1 },
         options
       )
-      
+
     case 'bounceIn':
       return animateElement(
         element,
@@ -224,7 +224,7 @@ export const animate = (
         { scale: 1, opacity: 1, ease: 'elastic.out(1, 0.3)' },
         options
       )
-      
+
     case 'pulse':
       return gsap.to(element, {
         scale: 1.05,
@@ -234,7 +234,7 @@ export const animate = (
         ease: 'power1.inOut',
         ...options
       })
-      
+
     default:
       console.warn(`Animatietype "${type}" is niet gedefinieerd.`)
       return animateElement(
@@ -261,11 +261,11 @@ export const animateStaggered = (
     ease = 'power2.out',
     ...restOptions
   } = options
-  
+
   // Bepaal het from/to voor het animatietype
   let fromVars: gsap.TweenVars = { opacity: 0, y: 20 }
   let toVars: gsap.TweenVars = { opacity: 1, y: 0 }
-  
+
   switch (childAnimation) {
     case 'fadeInLeft':
       fromVars = { opacity: 0, x: -20 }
@@ -285,7 +285,7 @@ export const animateStaggered = (
       break
     // fadeInUp is de default
   }
-  
+
   const tl = gsap.timeline();
   tl.fromTo(
     elements,
@@ -299,14 +299,14 @@ export const animateStaggered = (
       ...restOptions
     }
   );
-  
+
   return tl;
 }
 
 /**
  * Functie voor het animeren van een nummer dat optelt of aftelt
  */
-export const animateCountUp = (
+const animateCountUp = (
   element: gsap.TweenTarget,
   endValue: number,
   options: CountUpOptions = {}
@@ -320,12 +320,12 @@ export const animateCountUp = (
     isCurrency = false,
     ...restOptions
   } = options
-  
+
   // Reset de tekst naar 0 voordat de animatie start
   if (element instanceof HTMLElement) {
     element.textContent = '0'
   }
-  
+
   return gsap.fromTo(
     element,
     { textContent: 0 },
@@ -336,10 +336,10 @@ export const animateCountUp = (
       ease,
       snap: { textContent: 1 },
       ...restOptions,
-      onUpdate: function() {
+      onUpdate: function () {
         if (this.targets()[0]) {
           let value = parseFloat(this.targets()[0].textContent || '0')
-          
+
           if (isCurrency) {
             this.targets()[0].textContent = `${prefix}${value.toFixed(2)}${suffix}`
           } else {
@@ -356,34 +356,29 @@ export const animateCountUp = (
  */
 export const dashboardAnimations = {
   // Welcome banner entrance
-  welcomeBanner: (element: gsap.TweenTarget) => 
+  welcomeBanner: (element: gsap.TweenTarget) =>
     animate(element, 'fadeInDown', { duration: 0.5, ease: 'power3.out' }),
-  
+
   // Stats cards with staggered entrance
-  statsCards: (elements: gsap.TweenTarget) => 
+  statsCards: (elements: gsap.TweenTarget) =>
     animateStaggered(elements, {
       childAnimation: 'scale',
       staggerAmount: 0.1,
       duration: 0.6,
       ease: 'back.out(1.5)'
     }),
-  
+
   // Stat number counter animation
-  statValue: (element: gsap.TweenTarget, value: number, options: CountUpOptions = {}) => 
+  statValue: (element: gsap.TweenTarget, value: number, options: CountUpOptions = {}) =>
     animateCountUp(element, value, {
       duration: 1.5,
       delay: 0.3,
       ...options
     }),
-  
+
   // Table entrance animation
   table: (element: gsap.TweenTarget, delay: number = 0.4) =>
     animate(element, 'fadeInUp', { duration: 0.5, delay, ease: 'power2.out' }),
 }
 
-export default {
-  animate,
-  animateStaggered,
-  animateCountUp,
-  dashboardAnimations
-} 
+// Functions are already exported above with 'export const' 
