@@ -13,8 +13,8 @@ vi.mock('next/navigation', () => ({
   useRouter: vi.fn()
 }))
 
-// Mock Supabase client
-const mockSupabaseClient = {
+// Hoist mockSupabaseClient
+const mockSupabaseClient = vi.hoisted(() => ({
   auth: {
     getUser: vi.fn(),
     getSession: vi.fn(),
@@ -29,46 +29,48 @@ const mockSupabaseClient = {
       }))
     }))
   }))
-}
-
-vi.mock('@supabase/auth-helpers-nextjs', () => ({
-  createClientComponentClient: () => mockSupabaseClient
 }))
 
-// Mock services
-const mockTokenRefreshService = {
+// Mock Supabase client
+vi.mock('@supabase/auth-helpers-nextjs', () => ({
+  createClientComponentClient: vi.fn(() => mockSupabaseClient)
+}))
+
+// Hoist mock services
+const mockTokenRefreshService = vi.hoisted(() => ({
   refreshToken: vi.fn(),
   scheduleRefresh: vi.fn(),
   clearRefreshTimer: vi.fn(),
   isRefreshing: vi.fn(() => false),
   getTimeUntilRefresh: vi.fn(() => null)
-}
+}))
 
-const mockRateLimitService = {
+const mockRateLimitService = vi.hoisted(() => ({
   checkLimit: vi.fn(),
   recordAttempt: vi.fn(),
   resetLimit: vi.fn(),
   getStatus: vi.fn(),
   cleanup: vi.fn()
-}
+}))
 
-const mockErrorHandlerService = {
+const mockErrorHandlerService = vi.hoisted(() => ({
   handleAuthError: vi.fn(),
   handleRateLimitError: vi.fn(),
   logError: vi.fn(),
   categorizeError: vi.fn(),
   shouldRetry: vi.fn()
-}
+}))
 
-const mockLoggerService = {
+const mockLoggerService = vi.hoisted(() => ({
   logAuthEvent: vi.fn(),
   logSecurityEvent: vi.fn(),
   logPerformanceMetric: vi.fn(),
   logError: vi.fn(),
   sanitizeData: vi.fn(),
   getAuthLogs: vi.fn()
-}
+}))
 
+// Mock services
 vi.mock('../../services', () => ({
   defaultTokenRefreshService: mockTokenRefreshService,
   rateLimitService: mockRateLimitService,
@@ -368,7 +370,7 @@ describe('AuthContext Integration Tests', () => {
     )
 
     await waitFor(() => {
-      expect(mockTokenRefreshService.scheduleRefresh).toHaveBeenCalledWith(mockSession.expires_at * 1000)
+      expect(mockTokenRefreshService.scheduleRefresh).toHaveBeenCalledWith(mockSession.expires_at)
     })
   })
 
@@ -410,9 +412,10 @@ describe('AuthContext Integration Tests', () => {
   })
 
   it('should handle auth state changes and update user profile', async () => {
-    const mockAuthStateChange = vi.fn()
+    let authStateCallback: any = null
+    
     mockSupabaseClient.auth.onAuthStateChange.mockImplementation((callback) => {
-      mockAuthStateChange.mockImplementation(callback)
+      authStateCallback = callback
       return { data: { subscription: { unsubscribe: vi.fn() } } }
     })
 
@@ -430,9 +433,16 @@ describe('AuthContext Integration Tests', () => {
       </AuthProvider>
     )
 
+    // Wait for initial render
+    await waitFor(() => {
+      expect(screen.getByTestId('loading')).toHaveTextContent('Not loading')
+    })
+
     // Simulate auth state change
     await act(async () => {
-      await mockAuthStateChange('SIGNED_IN', { user: mockUser })
+      if (authStateCallback) {
+        await authStateCallback('SIGNED_IN', { user: mockUser })
+      }
     })
 
     await waitFor(() => {

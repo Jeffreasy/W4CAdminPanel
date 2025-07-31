@@ -131,9 +131,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.expires_at) {
-          // Schedule refresh 5 minutes before expiration
-          const expiresAt = session.expires_at * 1000 // Convert to milliseconds
-          defaultTokenRefreshService.scheduleRefresh(expiresAt)
+          // Schedule refresh (expires_at is in seconds)
+          defaultTokenRefreshService.scheduleRefresh(session.expires_at)
         }
       } catch (error) {
         console.error('Error getting session for token refresh:', error)
