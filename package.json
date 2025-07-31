@@ -6,14 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/auth-js": "^2.69.1",
-    "@supabase/supabase-js": "^2.49.3",
     "@supabase/postgrest-js": "^1.9.2",
+    "@supabase/supabase-js": "^2.49.3",
     "@types/node": "^20.11.5",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.2.18",
@@ -33,5 +36,12 @@
     "typescript": "^5.3.3",
     "uuid": "^11.1.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/ui": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "vitest": "^3.2.4"
+  }
 }
